@@ -1,0 +1,56 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_AGENDA } from '@/lib/sanity';
+
+const eventos = await sanity.fetch(QUERY_AGENDA);
+const tipoLabel: Record<string, string> = {
+  exposicao: 'Exposição',
+  residencia: 'Residência',
+  publicacao: 'Publicação',
+  abertura: 'Abertura',
+  conversa: 'Conversa',
+  palestra: 'Palestra',
+  lancamento: 'Lançamento',
+  participacao: 'Participação',
+  outro: '',
+};
+
+const hoje = new Date();
+---
+<BaseLayout title="Agenda" locale="pt">
+  <div class="container timeline">
+    <h1>Agenda</h1>
+    <ol class="timeline__list">
+      {eventos.map((ev: any) => {
+        const passado = new Date(ev.data) < hoje;
+        return (
+          <li class={`timeline__item ${passado ? 'timeline__item--passado' : 'timeline__item--futuro'}`}>
+            <span class="ficha-tecnica timeline__data">{new Date(ev.data).toLocaleDateString('pt-BR')}</span>
+            <div>
+              <span class="timeline__tipo ficha-tecnica">{tipoLabel[ev.tipo]}</span>
+              {ev.projetoRelacionado
+                ? <a href={`/exposicoes/${ev.projetoRelacionado.slug.current}`} class="timeline__titulo">{ev.titulo?.pt}</a>
+                : <span class="timeline__titulo">{ev.titulo?.pt}</span>}
+              {ev.descricao?.pt && <p class="timeline__descricao">{ev.descricao.pt}</p>}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  </div>
+</BaseLayout>
+
+<style>
+  .timeline { padding-block: var(--space-4); max-width: 42rem; }
+  .timeline__list { list-style: none; padding: 0; margin: 0; }
+  .timeline__item {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: var(--space-2);
+    padding-block: var(--space-2);
+    border-top: 1px solid var(--color-line);
+  }
+  .timeline__item--passado { opacity: 0.7; }
+  .timeline__titulo { font-family: var(--font-display); font-size: 1.15rem; display: block; }
+  .timeline__descricao { margin-top: var(--space-1); font-size: 0.9rem; color: var(--color-muted); }
+</style>

@@ -1,0 +1,257 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { sanity, QUERY_EXPOSICAO_POR_SLUG } from '../../lib/sanity';
+
+export async function getStaticPaths() {
+  const exposicoes = await sanity.fetch(`
+    *[
+      _type == "projeto" &&
+      categoria == "exposicao" &&
+      publicado == true
+    ] {
+      "slug": slug.current
+    }
+  `);
+
+  return exposicoes
+    .filter((exposicao: any) => exposicao.slug)
+    .map((exposicao: any) => ({
+      params: { slug: exposicao.slug }
+    }));
+}
+
+const { slug } = Astro.params;
+
+const exposicao = await sanity.fetch(
+  QUERY_EXPOSICAO_POR_SLUG,
+  { slug }
+);
+
+if (!exposicao) {
+  return Astro.redirect('/exposicoes');
+}
+
+const textoExposicao =
+  exposicao.textoPt ||
+  exposicao.textoEn ||
+  [];
+
+function textoParaParagrafos(texto: any) {
+  if (!Array.isArray(texto)) return [];
+
+  return texto
+    .filter((bloco: any) => bloco?._type === 'block')
+    .map((bloco: any) =>
+      (bloco.children || [])
+        .map((child: any) => child.text || '')
+        .join('')
+        .trim()
+    )
+    .filter(Boolean);
+}
+
+const paragrafosTexto = textoParaParagrafos(textoExposicao);
+---
+
+<BaseLayout
+  title={exposicao.titulo?.pt || exposicao.titulo?.en}
+  locale="pt"
+>
+  <article class="container exposicao-page">
+
+    <header class="exposicao-page__header">
+      <h1>{exposicao.titulo?.pt || exposicao.titulo?.en}</h1>
+
+      {paragrafosTexto.length > 0 && (
+        <a
+          href="#texto-exposicao"
+          class="exposicao-page__texto-link"
+        >
+          Ler o texto da exposição ↓
+        </a>
+      )}
+
+      <div class="ficha-tecnica exposicao-page__meta">
+
+        {exposicao.local?.pt && (
+          <span>{exposicao.local.pt}</span>
+        )}
+
+        {exposicao.dataInicio && (
+          <span>
+            {new Date(exposicao.dataInicio).toLocaleDateString('pt-BR')}
+          </span>
+        )}
+
+        {exposicao.dataFim && (
+          <span>
+            –
+            {new Date(exposicao.dataFim).toLocaleDateString('pt-BR')}
+          </span>
+        )}
+
+      </div>
+    </header>
+
+
+    <section class="exposicao-page__galeria">
+
+      {exposicao.imagensMontagem?.length > 0 && (
+        <>
+          <h2>Vistas da exposição</h2>
+
+          {exposicao.imagensMontagem.map((imagem: any) => (
+            <div class="exposicao-page__imagem">
+              <img
+                src={imagem.url}
+                alt=""
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </>
+      )}
+
+
+      {exposicao.imagensDetalhe?.length > 0 && (
+        <>
+          <h2>Detalhes</h2>
+
+          {exposicao.imagensDetalhe.map((imagem: any) => (
+            <div class="exposicao-page__imagem">
+              <img
+                src={imagem.url}
+                alt=""
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </>
+      )}
+
+
+      {exposicao.imagensObras?.length > 0 && (
+        <>
+          <h2>Obras</h2>
+
+          {exposicao.imagensObras.map((imagem: any) => (
+            <div class="exposicao-page__imagem">
+              <img
+                src={imagem.url}
+                alt=""
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </>
+      )}
+
+
+      {exposicao.imagensOutras?.length > 0 && (
+        <>
+          <h2>Outras imagens</h2>
+
+          {exposicao.imagensOutras.map((imagem: any) => (
+            <div class="exposicao-page__imagem">
+              <img
+                src={imagem.url}
+                alt=""
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </>
+      )}
+
+    </section>
+
+
+    {paragrafosTexto.length > 0 && (
+      <section
+        id="texto-exposicao"
+        class="exposicao-page__texto"
+      >
+        <h2>Texto da exposição</h2>
+
+        {paragrafosTexto.map((paragrafo: string) => (
+          <p>{paragrafo}</p>
+        ))}
+      </section>
+    )}
+
+  </article>
+</BaseLayout>
+
+
+<style>
+  .exposicao-page {
+    max-width: 1100px;
+  }
+
+  .exposicao-page__header {
+    margin-top: 3rem;
+    margin-bottom: 5rem;
+  }
+
+  .exposicao-page__header h1 {
+    margin: 0 0 1.5rem;
+  }
+
+  .exposicao-page__texto-link {
+    display: inline-block;
+    margin-bottom: 2rem;
+  }
+
+  .exposicao-page__meta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .exposicao-page__galeria h2 {
+    margin-top: 0;
+    margin-bottom: 3rem;
+  }
+
+  .exposicao-page__imagem {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 7rem;
+  }
+
+  .exposicao-page__imagem img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .exposicao-page__texto {
+    max-width: 620px;
+    margin-top: 2rem;
+    margin-bottom: 8rem;
+  }
+
+  .exposicao-page__texto h2 {
+    margin-bottom: 2rem;
+  }
+
+  .exposicao-page__texto p {
+    margin: 0 0 1.5rem;
+  }
+
+  @media (max-width: 700px) {
+    .exposicao-page__header {
+      margin-top: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .exposicao-page__imagem {
+      margin-bottom: 4rem;
+    }
+
+    .exposicao-page__texto {
+      margin-bottom: 5rem;
+    }
+  }
+</style>

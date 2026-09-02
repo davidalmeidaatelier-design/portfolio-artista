@@ -1,0 +1,165 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_TEXTO_POR_SLUG, blocksToParagraphs } from '../../../lib/sanity';
+
+export async function getStaticPaths() {
+  const textos = await sanity.fetch(`
+    *[_type == "texto" && publicado == true] {
+      "slug": slug.current
+    }
+  `);
+
+  return textos
+    .filter((texto: any) => texto.slug)
+    .map((texto: any) => ({
+      params: {
+        slug: texto.slug
+      }
+    }));
+}
+
+const { slug } = Astro.params;
+
+const textoData = await sanity.fetch(
+  QUERY_TEXTO_POR_SLUG,
+  { slug }
+);
+
+if (!textoData) {
+  return Astro.redirect('/en/texts');
+}
+
+const titulo = textoData.titulo?.en || textoData.titulo?.pt;
+const autor = textoData.autor;
+const corpo = textoData.corpo;
+const projetoTitulo =
+  textoData.projetoRelacionado?.titulo?.en ||
+  textoData.projetoRelacionado?.titulo?.pt;
+---
+
+<BaseLayout
+  title={titulo}
+  locale="en"
+>
+  <main class="container texto-page">
+
+    <header class="texto-page__cabecalho">
+
+      <h1>{titulo}</h1>
+
+      {autor && (
+        <p>{autor}</p>
+      )}
+
+    </header>
+
+    {textoData.capa && (
+      <section class="texto-page__capa">
+        <img
+          src={textoData.capa}
+          alt={titulo}
+          loading="lazy"
+        />
+      </section>
+    )}
+
+    {corpo && (
+      <section class="texto-page__corpo">
+        {blocksToParagraphs(corpo).map((paragrafo: string) => (
+          <p>{paragrafo}</p>
+        ))}
+      </section>
+    )}
+
+    {projetoTitulo && textoData.projetoRelacionado?.slug?.current && (
+      <section class="texto-page__projeto">
+        <p>
+          Project: {projetoTitulo}
+        </p>
+
+        <a
+          href={`/en/projects/${textoData.projetoRelacionado.slug.current}`}
+        >
+          View project →
+        </a>
+      </section>
+    )}
+
+  </main>
+</BaseLayout>
+
+<style>
+  .texto-page {
+    max-width: 900px;
+  }
+
+  .texto-page__cabecalho {
+    margin-bottom: 5rem;
+  }
+
+  .texto-page__cabecalho h1 {
+    margin-bottom: 1rem;
+  }
+
+  .texto-page__cabecalho p {
+    margin: 0;
+  }
+
+  .texto-page__capa {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 5rem;
+  }
+
+  .texto-page__capa img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 80vh;
+    display: block;
+  }
+
+  .texto-page__corpo {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .texto-page__corpo p {
+    margin: 0 0 1.5rem;
+  }
+
+  .texto-page__projeto {
+    max-width: 700px;
+    margin: 5rem auto 0;
+  }
+
+  .texto-page__projeto p {
+    margin-bottom: 0.75rem;
+  }
+
+  .texto-page__projeto a {
+    text-decoration: none;
+  }
+
+  .texto-page__projeto a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 700px) {
+    .texto-page__cabecalho {
+      margin-bottom: 3rem;
+    }
+
+    .texto-page__capa {
+      margin-bottom: 3rem;
+    }
+
+    .texto-page__corpo {
+      max-width: 100%;
+    }
+
+    .texto-page__projeto {
+      margin-top: 3rem;
+    }
+  }
+</style>

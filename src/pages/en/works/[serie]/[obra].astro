@@ -1,0 +1,157 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_OBRA_POR_SLUG } from '../../../../lib/sanity';
+
+export async function getStaticPaths() {
+  const obras = await sanity.fetch(`
+    *[_type == "obra" && publicado == true] {
+      "slug": slug.current,
+      "serie": serie->slug.current
+    }
+  `);
+
+  return obras
+    .filter((obra: any) => obra.slug && obra.serie)
+    .map((obra: any) => ({
+      params: {
+        serie: obra.serie,
+        obra: obra.slug
+      }
+    }));
+}
+
+const slug = Astro.params.obra;
+
+const obraData = await sanity.fetch(
+  QUERY_OBRA_POR_SLUG,
+  { slug }
+);
+
+if (!obraData) {
+  return Astro.redirect('/en/works');
+}
+
+const titulo = obraData.titulo?.en || obraData.titulo?.pt;
+const tecnica = obraData.tecnica?.en || obraData.tecnica?.pt;
+const dimensoes = obraData.dimensoes?.en || obraData.dimensoes?.pt;
+const descricao = obraData.descricao?.en || obraData.descricao?.pt;
+---
+
+<BaseLayout title={titulo} locale="en">
+
+  <main class="container obra-page">
+
+    <header class="obra-page__cabecalho">
+
+      <h1>{titulo}</h1>
+
+      {obraData.ano && (
+        <p>{obraData.ano}</p>
+      )}
+
+      {tecnica && (
+        <p>{tecnica}</p>
+      )}
+
+      {dimensoes && (
+        <p>{dimensoes}</p>
+      )}
+
+    </header>
+
+    {obraData.imagens && (
+      <section class="obra-page__galeria">
+
+        {obraData.imagens.map((imagem: any) => (
+          <div class="obra-page__imagem">
+            <img
+              src={imagem.url}
+              alt=""
+              loading="lazy"
+            />
+          </div>
+        ))}
+
+      </section>
+    )}
+
+    {descricao && (
+      <section class="obra-page__descricao">
+        <p>{descricao}</p>
+      </section>
+    )}
+
+  </main>
+
+</BaseLayout>
+
+<style>
+  .obra-page {
+    padding-top: 3rem;
+    padding-bottom: 8rem;
+  }
+
+  .obra-page__cabecalho {
+    margin-bottom: 6rem;
+  }
+
+  .obra-page__cabecalho h1 {
+    margin-bottom: 1rem;
+  }
+
+  .obra-page__cabecalho p {
+    margin: 0.25rem 0;
+  }
+
+  .obra-page__galeria {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8rem;
+  }
+
+  .obra-page__imagem {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .obra-page__imagem img {
+    width: auto;
+    max-width: 78%;
+    height: auto;
+    max-height: 82vh;
+    display: block;
+    object-fit: contain;
+  }
+
+  .obra-page__descricao {
+    max-width: 700px;
+    margin: 8rem auto 0;
+  }
+
+  @media (max-width: 700px) {
+    .obra-page {
+      padding-top: 2rem;
+      padding-bottom: 5rem;
+    }
+
+    .obra-page__cabecalho {
+      margin-bottom: 4rem;
+    }
+
+    .obra-page__galeria {
+      gap: 5rem;
+    }
+
+    .obra-page__imagem img {
+      max-width: 100%;
+      max-height: none;
+    }
+
+    .obra-page__descricao {
+      margin-top: 5rem;
+    }
+  }
+</style>
+

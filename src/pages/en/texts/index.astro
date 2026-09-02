@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_TEXTOS } from '../../../lib/sanity';
+
+const textos = await sanity.fetch(QUERY_TEXTOS);
+---
+
+<BaseLayout title="Texts" locale="en">
+
+  <main class="container textos-page">
+
+    <h1>Texts</h1>
+
+    <section class="textos-lista">
+
+      {textos.map((texto: any) => (
+
+        <a
+          href={`/en/texts/${texto.slug?.current}`}
+          class="texto"
+        >
+
+          {texto.capa && (
+            <img
+              src={texto.capa}
+              alt={texto.titulo?.en || texto.titulo?.pt}
+              loading="lazy"
+            />
+          )}
+
+          <div class="texto__info">
+
+            <h2>
+              {texto.titulo?.en || texto.titulo?.pt}
+            </h2>
+
+            {texto.autor && (
+              <p>{texto.autor}</p>
+            )}
+
+            {texto.projetoRelacionado && (
+              <p>
+                {texto.projetoRelacionado.titulo?.en ||
+                  texto.projetoRelacionado.titulo?.pt}
+              </p>
+            )}
+
+          </div>
+
+        </a>
+
+      ))}
+
+    </section>
+
+  </main>
+
+</BaseLayout>
+
+<style>
+  .textos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+    margin-top: 4rem;
+  }
+
+  .texto {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .texto img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    object-fit: contain;
+  }
+
+  .texto__info {
+    margin-top: 1.5rem;
+  }
+
+  .texto__info h2 {
+    margin: 0 0 0.5rem;
+  }
+
+  .texto__info p {
+    margin: 0.3rem 0;
+  }
+
+  @media (max-width: 700px) {
+    .textos-lista {
+      gap: 4rem;
+      margin-top: 3rem;
+    }
+
+    .texto img {
+      max-height: none;
+    }
+  }
+</style>

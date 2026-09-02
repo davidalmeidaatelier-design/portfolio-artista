@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_EXPOSICOES } from '../../../lib/sanity';
+
+const exposicoes = await sanity.fetch(QUERY_EXPOSICOES);
+---
+
+<BaseLayout title="Exhibitions" locale="en">
+
+  <main class="container exposicoes-page">
+
+    <h1>Exhibitions</h1>
+
+    <section class="exposicoes-lista">
+
+      {exposicoes.map((exposicao: any) => (
+
+        <a
+          href={`/en/exhibitions/${exposicao.slug?.current}`}
+          class="exposicao"
+        >
+
+          {exposicao.capa && (
+            <img
+              src={exposicao.capa}
+              alt={exposicao.titulo?.en || exposicao.titulo?.pt}
+              loading="lazy"
+            />
+          )}
+
+          <div class="exposicao__info">
+
+            <h2>
+              {exposicao.titulo?.en || exposicao.titulo?.pt}
+            </h2>
+
+            {exposicao.local && (
+              <p>
+                {exposicao.local?.en || exposicao.local?.pt}
+              </p>
+            )}
+
+            {exposicao.dataInicio && (
+              <p>
+                {exposicao.dataInicio}
+                {exposicao.dataFim && ` – ${exposicao.dataFim}`}
+              </p>
+            )}
+
+          </div>
+
+        </a>
+
+      ))}
+
+    </section>
+
+  </main>
+
+</BaseLayout>
+
+<style>
+  .exposicoes-lista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding-block: var(--space-3);
+  }
+
+  .exposicao {
+    display: block;
+    text-decoration: none;
+  }
+
+  .exposicao img {
+    width: 70%;
+    max-width: 720px;
+    height: auto;
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+
+  .exposicao__info h2 {
+    font-size: 1.6rem;
+    margin: 0 0 var(--space-1);
+  }
+
+  .exposicao__info p {
+    margin: 0 0 var(--space-1);
+  }
+
+  @media (max-width: 768px) {
+    .exposicao img {
+      width: 100%;
+      max-width: none;
+    }
+  }
+</style>

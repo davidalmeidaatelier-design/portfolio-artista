@@ -1,0 +1,103 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import {
+  sanity,
+  QUERY_EXPOSICAO_DESTAQUE,
+  QUERY_OBRA_RECENTE,
+  QUERY_TEXTO_RECENTE,
+  QUERY_AGENDA_RECENTE,
+  blocksToParagraphs,
+} from '@/lib/sanity';
+
+const exposicaoDestaque = await sanity.fetch(QUERY_EXPOSICAO_DESTAQUE);
+const obraRecente = await sanity.fetch(QUERY_OBRA_RECENTE);
+const textoRecente = await sanity.fetch(QUERY_TEXTO_RECENTE);
+const agendaRecente = await sanity.fetch(QUERY_AGENDA_RECENTE);
+
+const paragrafosExposicao = blocksToParagraphs(exposicaoDestaque?.texto?.pt).slice(0, 1);
+
+function periodo(ex: any) {
+  const ini = ex?.dataInicio ? new Date(ex.dataInicio).getFullYear() : null;
+  const fim = ex?.dataFim ? new Date(ex.dataFim).getFullYear() : null;
+  if (!ini) return '';
+  if (!fim || fim === ini) return String(ini);
+  return `${ini}–${fim}`;
+}
+---
+<BaseLayout title="Início" locale="pt">
+  <div class="container">
+
+    {exposicaoDestaque && (
+      <section class="destaque">
+        <span class="ficha-tecnica destaque__eyebrow">Exposição</span>
+        <div class="destaque__grid">
+          {exposicaoDestaque.capa && (
+            <a href={`/exposicoes/${exposicaoDestaque.slug.current}`}>
+              <img src={exposicaoDestaque.capa} alt={exposicaoDestaque.titulo?.pt} class="destaque__imagem" />
+            </a>
+          )}
+          <div class="destaque__info">
+            <h1 class="destaque__titulo">{exposicaoDestaque.titulo?.pt}</h1>
+            <div class="ficha-tecnica destaque__meta">
+              {exposicaoDestaque.local?.pt}
+              {periodo(exposicaoDestaque) && ` · ${periodo(exposicaoDestaque)}`}
+            </div>
+            {paragrafosExposicao.map((p) => <p>{p}</p>)}
+            <a href={`/exposicoes/${exposicaoDestaque.slug.current}`} class="destaque__link">Ver exposição completa →</a>
+          </div>
+        </div>
+      </section>
+    )}
+
+    {(obraRecente || textoRecente || agendaRecente) && (
+      <section class="recentes">
+        {obraRecente && (
+          <a href={`/obras/${obraRecente.serie?.slug?.current}/${obraRecente.slug.current}`} class="recentes__item">
+            {obraRecente.imagemPrincipal && <img src={obraRecente.imagemPrincipal} alt={obraRecente.titulo?.pt} />}
+            <span class="recentes__titulo">{obraRecente.titulo?.pt}</span>
+          </a>
+        )}
+        {textoRecente && (
+          <a href={`/textos/${textoRecente.slug.current}`} class="recentes__item">
+            <span class="ficha-tecnica recentes__tipo">Texto</span>
+            <span class="recentes__titulo">{textoRecente.titulo?.pt}</span>
+          </a>
+        )}
+        {agendaRecente && (
+          <a href={agendaRecente.projetoRelacionado ? `/exposicoes/${agendaRecente.projetoRelacionado.slug.current}` : '/agenda'} class="recentes__item">
+            <span class="ficha-tecnica recentes__tipo">Agenda</span>
+            <span class="recentes__titulo">{agendaRecente.titulo?.pt}</span>
+          </a>
+        )}
+      </section>
+    )}
+
+    <section class="obras-cta">
+      <a href="/obras">Ver todas as obras →</a>
+    </section>
+
+  </div>
+</BaseLayout>
+
+<style>
+  .destaque { padding-block: var(--space-4); border-bottom: 1px solid var(--color-line); }
+  .destaque__eyebrow { color: var(--color-muted); display: block; margin-bottom: var(--space-2); }
+  .destaque__grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: var(--space-4); align-items: center; }
+  .destaque__imagem { width: 100%; height: auto; display: block; }
+  .destaque__titulo { font-family: var(--font-display); font-size: 2rem; margin: 0 0 var(--space-2); }
+  .destaque__meta { color: var(--color-muted); margin-bottom: var(--space-2); }
+  .destaque__link { display: inline-block; margin-top: var(--space-2); }
+
+  .recentes { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); padding-block: var(--space-4); border-bottom: 1px solid var(--color-line); }
+  .recentes__item { display: block; }
+  .recentes__item img { width: 100%; height: auto; display: block; margin-bottom: var(--space-1); }
+  .recentes__tipo { color: var(--color-muted); display: block; margin-bottom: var(--space-1); }
+  .recentes__titulo { font-family: var(--font-display); font-size: 1.1rem; }
+
+  .obras-cta { padding-block: var(--space-4); }
+
+  @media (max-width: 768px) {
+    .destaque__grid { grid-template-columns: 1fr; }
+    .recentes { grid-template-columns: 1fr; }
+  }
+</style>

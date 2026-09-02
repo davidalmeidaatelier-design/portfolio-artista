@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Contact" locale="en">
+  <article class="container contato-page">
+    <h1>Contact</h1>
+
+    <p>
+      <a href="mailto:contato@seudominio.com">
+        contato@seudominio.com
+      </a>
+    </p>
+
+    <p class="ficha-tecnica">
+      <a
+        href="https://instagram.com/"
+        target="_blank"
+        rel="noopener"
+      >
+        Instagram
+      </a>
+      ·
+      <a
+        href="https://youtube.com/"
+        target="_blank"
+        rel="noopener"
+      >
+        YouTube
+      </a>
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .contato-page {
+    padding-block: var(--space-4);
+    max-width: 32rem;
+  }
+</style>

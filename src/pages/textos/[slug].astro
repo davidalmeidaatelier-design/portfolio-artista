@@ -1,0 +1,47 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_TEXTO_POR_SLUG, blocksToParagraphs } from '@/lib/sanity';
+
+export async function getStaticPaths() {
+  const textos = await sanity.fetch(`
+    *[_type == "texto" && publicado == true] {
+      "slug": slug.current
+    }
+  `);
+
+  return textos
+    .filter((texto: any) => texto.slug)
+    .map((texto: any) => ({
+      params: {
+        slug: texto.slug
+      }
+    }));
+}
+
+const { slug } = Astro.params;
+const texto = await sanity.fetch(QUERY_TEXTO_POR_SLUG, { slug });
+
+if (!texto) return Astro.redirect('/textos');
+const paragrafosCorpo = blocksToParagraphs(texto.corpo?.pt);
+---
+<BaseLayout title={texto.titulo?.pt} locale="pt">
+  <article class="container texto-page">
+    <h1>{texto.titulo?.pt}</h1>
+    <div class="ficha-tecnica texto-page__meta">
+      {texto.autor}
+      {texto.projetoRelacionado && (
+        <> · <a href={`/exposicoes/${texto.projetoRelacionado.slug.current}`}>{texto.projetoRelacionado.titulo?.pt}</a></>
+      )}
+    </div>
+    {texto.capa && <img src={texto.capa} alt="" class="texto-page__capa" />}
+    <div class="texto-page__corpo">
+      {paragrafosCorpo.map((p) => <p>{p}</p>)}
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .texto-page { padding-block: var(--space-4); max-width: 60ch; }
+  .texto-page__meta { color: var(--color-muted); margin-block: var(--space-1) var(--space-3); }
+  .texto-page__capa { width: 100%; height: auto; display: block; margin-bottom: var(--space-3); }
+</style>

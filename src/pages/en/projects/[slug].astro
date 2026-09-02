@@ -1,0 +1,179 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_PROJETO_POR_SLUG, blocksToParagraphs } from '../../../lib/sanity';
+
+export async function getStaticPaths() {
+  const projetos = await sanity.fetch(`
+    *[_type == "projeto" && categoria == "projeto" && publicado == true] {
+      "slug": slug.current
+    }
+  `);
+
+  return projetos
+    .filter((projeto: any) => projeto.slug)
+    .map((projeto: any) => ({
+      params: {
+        slug: projeto.slug
+      }
+    }));
+}
+
+const { slug } = Astro.params;
+
+const projeto = await sanity.fetch(
+  QUERY_PROJETO_POR_SLUG,
+  { slug }
+);
+
+if (!projeto) {
+  return Astro.redirect('/en/projects');
+}
+
+const titulo = projeto.titulo?.en || projeto.titulo?.pt;
+const texto = projeto.texto?.en || projeto.texto?.pt;
+const paragrafosTexto = blocksToParagraphs(texto);
+---
+
+<BaseLayout title={titulo} locale="en">
+  <article class="container projeto-page">
+
+    <header class="projeto-page__header">
+      <h1>{titulo}</h1>
+
+      <p class="ficha-tecnica">
+        {projeto.local?.en || projeto.local?.pt}
+        {projeto.dataInicio && ` — ${projeto.dataInicio}`}
+      </p>
+    </header>
+
+    {projeto.imagensMontagem?.length > 0 && (
+      <figure class="projeto-page__capa">
+        <img
+          src={projeto.imagensMontagem[0].url}
+          alt=""
+        />
+      </figure>
+    )}
+
+    {paragrafosTexto.length > 0 && (
+      <div class="projeto-page__texto">
+        {paragrafosTexto.map((p) => (
+          <p>{p}</p>
+        ))}
+      </div>
+    )}
+
+    {projeto.imagensMontagem?.length > 0 && (
+      <section>
+        <h2>Installation</h2>
+
+        <div class="projeto-page__grid">
+          {projeto.imagensMontagem.map((img: any) => (
+            <img
+              src={img.url}
+              alt=""
+              loading="lazy"
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    {projeto.obrasRelacionadas?.length > 0 && (
+      <section>
+        <h2>Works</h2>
+
+        <div class="projeto-page__grid">
+          {projeto.obrasRelacionadas.map((obra: any) => (
+            <a
+              href={`/en/works/${obra.serie?.slug?.current}/${obra.slug?.current}`}
+            >
+              <img
+                src={obra.imagem}
+                alt={obra.titulo?.en || obra.titulo?.pt}
+                loading="lazy"
+              />
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+  </article>
+</BaseLayout>
+
+<style>
+  .projeto-page {
+    padding-block: var(--space-4);
+    max-width: 60rem;
+  }
+
+  .projeto-page__header {
+    margin-bottom: var(--space-4);
+  }
+
+  .projeto-page__header h1 {
+    margin: 0 0 var(--space-1);
+    font-size: clamp(2.2rem, 5vw, 4.5rem);
+    line-height: 1.05;
+    font-weight: 400;
+  }
+
+  .projeto-page__capa {
+    margin: 0 auto var(--space-4);
+    max-width: 28rem;
+  }
+
+  .projeto-page__capa img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .projeto-page__texto {
+    max-width: 46rem;
+    margin-bottom: var(--space-5);
+  }
+
+  .projeto-page__texto p {
+    margin: 0 0 var(--space-2);
+  }
+
+  section {
+    margin-top: var(--space-5);
+  }
+
+  section h2 {
+    margin-bottom: var(--space-2);
+  }
+
+  .projeto-page__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+
+  .projeto-page__grid img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  @media (max-width: 700px) {
+    .projeto-page {
+      padding-block: var(--space-3);
+    }
+
+    .projeto-page__header h1 {
+      font-size: 2.4rem;
+    }
+
+    .projeto-page__capa {
+      max-width: 100%;
+    }
+
+    .projeto-page__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

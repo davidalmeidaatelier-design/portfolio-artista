@@ -1,0 +1,120 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_SOBRE, blocksToParagraphs } from '@/lib/sanity';
+
+const sobre = await sanity.fetch(QUERY_SOBRE);
+
+const texto = sobre?.texto?.pt || sobre?.texto?.en;
+const miniBio = sobre?.miniBio?.pt || sobre?.miniBio?.en;
+const curriculo = sobre?.curriculo?.pt || sobre?.curriculo?.en;
+---
+
+<BaseLayout title="Sobre" locale="pt">
+  <main class="container sobre-page">
+
+    {sobre?.imagem && (
+      <section class="sobre-page__imagem">
+        <img
+          src={sobre.imagem}
+          alt="David Almeida"
+          loading="lazy"
+        />
+      </section>
+    )}
+
+    <header class="sobre-page__cabecalho">
+      <h1>Sobre</h1>
+    </header>
+
+    {texto && (
+      <section class="sobre-page__secao">
+        {blocksToParagraphs(texto).map((paragrafo: string) => (
+          <p>{paragrafo}</p>
+        ))}
+      </section>
+    )}
+
+    {miniBio && (
+      <section class="sobre-page__secao">
+
+        {blocksToParagraphs(miniBio).map((paragrafo: string) => (
+          <p>{paragrafo}</p>
+        ))}
+      </section>
+    )}
+
+    {curriculo && (
+      <section class="sobre-page__secao">
+        <h2>Currículo</h2>
+
+        {blocksToParagraphs(curriculo).map((paragrafo: string) => (
+          <p>{paragrafo}</p>
+        ))}
+      </section>
+    )}
+
+  </main>
+</BaseLayout>
+
+<style>
+  .sobre-page {
+    max-width: 900px;
+  }
+
+  .sobre-page__imagem {
+    display: flex;
+    justify-content: center;
+    margin-top: 4rem;
+    margin-bottom: 5rem;
+  }
+
+  .sobre-page__imagem img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 55vh;
+    display: block;
+  }
+
+  .sobre-page__cabecalho {
+    margin-bottom: 4rem;
+  }
+
+  .sobre-page__cabecalho h1 {
+    margin: 0;
+  }
+
+  .sobre-page__secao {
+    max-width: 620px;
+    margin-bottom: 5rem;
+  }
+
+  .sobre-page__secao h2 {
+    margin-bottom: 1.5rem;
+  }
+
+  .sobre-page__secao p {
+    margin: 0 0 1.5rem;
+    font-size: 0.95em;
+  }
+
+  @media (max-width: 700px) {
+    .sobre-page__imagem {
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .sobre-page__imagem img {
+      max-height: 55vh;
+    }
+
+    .sobre-page__cabecalho {
+      margin-bottom: 3rem;
+    }
+
+    .sobre-page__secao {
+      max-width: 100%;
+      margin-bottom: 3rem;
+    }
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+interface Props {
+  titulo: string;
+  ano?: number;
+  tecnica?: string;
+  imagemUrl: string;
+  href: string;
+  locale: 'pt' | 'en';
+}
+const { titulo, ano, tecnica, imagemUrl, href } = Astro.props;
+---
+<a href={href} class="work-card">
+  <img src={imagemUrl} alt={titulo} loading="lazy" />
+  <dl class="ficha-tecnica work-card__legend">
+    <div><dt>Título</dt><dd>{titulo}</dd></div>
+    {ano && <div><dt>Ano</dt><dd>{ano}</dd></div>}
+    {tecnica && <div><dt>Técnica</dt><dd>{tecnica}</dd></div>}
+  </dl>
+</a>
+
+<style>
+  .work-card {
+    display: block;
+    break-inside: avoid;
+    margin-bottom: var(--space-3);
+  }
+  .work-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .work-card__legend {
+    margin-top: var(--space-1);
+  }
+</style>

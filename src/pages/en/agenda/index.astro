@@ -1,0 +1,115 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_AGENDA } from '../../../lib/sanity';
+
+const agenda = await sanity.fetch(QUERY_AGENDA);
+---
+
+<BaseLayout title="Agenda" locale="en">
+
+  <main class="container agenda-page">
+
+    <h1>Agenda</h1>
+
+    <section class="agenda-lista">
+
+      {agenda.map((evento: any) => (
+
+        <article class="evento">
+
+          <div class="evento__data">
+            {evento.data}
+          </div>
+
+          <div class="evento__info">
+
+            <h2>
+              {evento.titulo?.en || evento.titulo?.pt}
+            </h2>
+
+            {evento.tipo && (
+              <p>{evento.tipo}</p>
+            )}
+
+            {evento.descricao?.en || evento.descricao?.pt ? (
+              <p>
+                {evento.descricao?.en || evento.descricao?.pt}
+              </p>
+            ) : null}
+
+            {evento.linkExterno && (
+              <a
+                href={evento.linkExterno}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                More information →
+              </a>
+            )}
+
+            {evento.projetoRelacionado && (
+              <a
+                href={`/en/exhibitions/${evento.projetoRelacionado.slug?.current}`}
+              >
+                {evento.projetoRelacionado.titulo?.en ||
+                  evento.projetoRelacionado.titulo?.pt}
+              </a>
+            )}
+
+          </div>
+
+        </article>
+
+      ))}
+
+    </section>
+
+  </main>
+
+</BaseLayout>
+
+<style>
+  .agenda-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    margin-top: 4rem;
+  }
+
+  .evento {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 2rem;
+  }
+
+  .evento__data {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .evento__info h2 {
+    margin: 0 0 0.5rem;
+  }
+
+  .evento__info p {
+    margin: 0.3rem 0;
+  }
+
+  .evento__info a {
+    display: block;
+    margin-top: 0.8rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  @media (max-width: 700px) {
+    .agenda-lista {
+      gap: 2.5rem;
+      margin-top: 3rem;
+    }
+
+    .evento {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  }
+</style>

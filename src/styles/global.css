@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,400&family=Public+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  /* --- Cor --- */
+  --color-paper: #f6f5f1;
+  --color-ink: #1c1b18;
+  --color-muted: #87816f;
+  --color-line: #e2ded4;
+  --color-accent: #5f6a4c; /* oliva silencioso — só hover/links, nunca decorativo */
+
+  /* --- Tipografia --- */
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Public Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* --- Espaço --- */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 2rem;
+  --space-4: 4rem;
+  --space-5: 8rem;
+
+  /* --- Ritmo --- */
+  --max-content: 74rem;
+  --radius: 2px; /* quase nenhum arredondamento — silhueta de catálogo, não de app */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.1;
+  margin: 0 0 var(--space-2);
+}
+
+h1 { font-size: clamp(2rem, 4vw, 3.25rem); font-weight: 300; }
+h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
+
+p { margin: 0 0 var(--space-2); color: var(--color-ink); }
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+a:hover, a:focus-visible {
+  color: var(--color-accent);
+}
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Ficha técnica ao estilo etiqueta de museu — elemento de assinatura do site */
+.ficha-tecnica {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}
+.ficha-tecnica dt {
+  display: inline;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+.ficha-tecnica dt::after { content: ': '; }
+.ficha-tecnica dd {
+  display: inline;
+  margin: 0;
+  color: var(--color-ink);
+}
+.ficha-tecnica dd::after { content: '\A'; white-space: pre; }
+
+.container {
+  max-width: var(--max-content);
+  margin-inline: auto;
+  padding-inline: var(--space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_PROJETOS } from '../../../lib/sanity';
+
+const projetos = await sanity.fetch(QUERY_PROJETOS);
+---
+
+<BaseLayout title="Projects" locale="en">
+
+  <main class="container projetos-page">
+
+    <h1>Projects</h1>
+
+    <section class="projetos-lista">
+
+      {projetos.map((projeto: any) => (
+
+        <a
+          href={`/en/projects/${projeto.slug?.current}`}
+          class="projeto"
+        >
+
+          {projeto.capa && (
+            <img
+              src={projeto.capa}
+              alt={projeto.titulo?.en || projeto.titulo?.pt}
+              loading="lazy"
+            />
+          )}
+
+          <div class="projeto__info">
+
+            <h2>
+              {projeto.titulo?.en || projeto.titulo?.pt}
+            </h2>
+
+            {projeto.local && (
+              <p>
+                {projeto.local?.en || projeto.local?.pt}
+              </p>
+            )}
+
+            {projeto.dataInicio && (
+              <p>
+                {projeto.dataInicio}
+                {projeto.dataFim && ` – ${projeto.dataFim}`}
+              </p>
+            )}
+
+          </div>
+
+        </a>
+
+      ))}
+
+    </section>
+
+  </main>
+
+</BaseLayout>
+
+<style>
+  .projetos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding-block: var(--space-3);
+  }
+
+  .projeto {
+    display: block;
+    text-decoration: none;
+  }
+
+  .projeto img {
+    width: 70%;
+    max-width: 720px;
+    height: auto;
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+
+  .projeto__info h2 {
+    font-size: 1.6rem;
+    margin: 0 0 var(--space-1);
+  }
+
+  .projeto__info p {
+    margin: 0 0 var(--space-1);
+  }
+
+  @media (max-width: 768px) {
+    .projeto img {
+      width: 100%;
+      max-width: none;
+    }
+  }
+</style>

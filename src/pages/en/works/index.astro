@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { sanity, QUERY_OBRAS_POR_SERIE } from '../../../lib/sanity';
+
+const series = await sanity.fetch(QUERY_OBRAS_POR_SERIE);
+---
+
+<BaseLayout title="Works" locale="en">
+
+  <main class="container obras-page">
+
+    <h1>Works</h1>
+
+    {series.map((serie: any) => (
+      <section class="serie">
+
+        <h2>
+          {serie.titulo?.en || serie.titulo?.pt}
+        </h2>
+
+        {serie.obras?.length > 0 && (
+          <div class="obras-grid">
+
+            {serie.obras.map((obra: any) => (
+              <a
+                href={`/en/works/${serie.slug?.current}/${obra.slug?.current}`}
+                class="obra-card"
+              >
+
+                {obra.imagemPrincipal && (
+                  <img
+                    src={obra.imagemPrincipal}
+                    alt={obra.titulo?.en || obra.titulo?.pt}
+                    loading="lazy"
+                  />
+                )}
+
+                <div class="obra-info">
+                  <span>
+                    {obra.titulo?.en || obra.titulo?.pt}
+                  </span>
+
+                  {obra.ano && (
+                    <span>{obra.ano}</span>
+                  )}
+                </div>
+
+              </a>
+            ))}
+
+          </div>
+        )}
+
+      </section>
+    ))}
+
+  </main>
+
+</BaseLayout>
+<style>
+  .obras-page {
+    padding-top: 3rem;
+    padding-bottom: 6rem;
+  }
+
+  .obras-page h1 {
+    margin-bottom: 5rem;
+  }
+
+  .serie {
+    margin-bottom: 7rem;
+  }
+
+  .serie h2 {
+    margin-bottom: 2rem;
+  }
+
+  .obras-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem 2rem;
+  }
+
+  .obra-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .obra-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .obra-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  @media (max-width: 700px) {
+    .obras-grid {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+
+    .serie {
+      margin-bottom: 5rem;
+    }
+  }
+</style>

@@ -1,0 +1,114 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_PROJETOS } from '@/lib/sanity';
+
+const projetos = await sanity.fetch(QUERY_PROJETOS);
+
+const grupos = {
+  atual: projetos.filter((p: any) => p.status === 'atual'),
+  futuro: projetos.filter((p: any) => p.status === 'futuro'),
+  passado: projetos.filter((p: any) => p.status === 'passado'),
+};
+
+const labels = {
+  atual: 'Atuais',
+  futuro: 'Em desenvolvimento',
+  passado: 'Passados'
+};
+---
+
+<BaseLayout title="Projetos" locale="pt">
+  <main class="container projetos-page">
+
+    {Object.entries(grupos).map(([key, lista]: any) => lista.length > 0 && (
+      <section class="grupo">
+        <h2>{labels[key as keyof typeof labels]}</h2>
+
+        <div class="projetos-lista">
+          {lista.map((projeto: any) => (
+            <a
+              href={`/projetos/${projeto.slug?.current}`}
+              class="projeto"
+            >
+
+              {projeto.capa && (
+                <img
+                  src={projeto.capa}
+                  alt={projeto.titulo?.pt}
+                  loading="lazy"
+                />
+              )}
+
+              <div class="projeto__info">
+
+                <h3>
+                  {projeto.titulo?.pt}
+                </h3>
+
+                {projeto.local?.pt && (
+                  <p>{projeto.local.pt}</p>
+                )}
+
+                {projeto.dataInicio && (
+                  <p>
+                    {projeto.dataInicio}
+                    {projeto.dataFim && ` – ${projeto.dataFim}`}
+                  </p>
+                )}
+
+              </div>
+
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+  </main>
+</BaseLayout>
+
+<style>
+  .grupo {
+    margin-block: var(--space-4);
+  }
+
+  .grupo h2 {
+    margin-bottom: var(--space-3);
+  }
+
+  .projetos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .projeto {
+    display: block;
+    text-decoration: none;
+  }
+
+  .projeto img {
+    width: 70%;
+    max-width: 720px;
+    height: auto;
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+
+  .projeto__info h3 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    margin: 0 0 var(--space-1);
+  }
+
+  .projeto__info p {
+    margin: 0 0 var(--space-1);
+  }
+
+  @media (max-width: 768px) {
+    .projeto img {
+      width: 100%;
+      max-width: none;
+    }
+  }
+</style>

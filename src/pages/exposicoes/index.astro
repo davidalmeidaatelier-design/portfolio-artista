@@ -1,0 +1,46 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_EXPOSICOES } from '@/lib/sanity';
+
+const exposicoes = await sanity.fetch(QUERY_EXPOSICOES);
+
+function periodo(ev: any) {
+  const ini = ev.dataInicio ? new Date(ev.dataInicio).getFullYear() : null;
+  const fim = ev.dataFim ? new Date(ev.dataFim).getFullYear() : null;
+  if (!ini) return '';
+  if (!fim || fim === ini) return String(ini);
+  return `${ini}–${fim}`;
+}
+---
+<BaseLayout title="Exposições" locale="pt">
+  <div class="container">
+    <h1>Exposições</h1>
+    <ul class="exposicoes__list">
+      {exposicoes.map((ex: any) => (
+        <li class="exposicoes__item">
+          <a href={`/exposicoes/${ex.slug.current}`}>
+            {ex.capa && <img src={ex.capa} alt={ex.titulo?.pt} class="exposicoes__capa" loading="lazy" />}
+            <div class="exposicoes__info">
+              <span class="ficha-tecnica exposicoes__periodo">{periodo(ex)}</span>
+              <h2 class="exposicoes__titulo">{ex.titulo?.pt}</h2>
+              {ex.local?.pt && <p class="exposicoes__local">{ex.local.pt}</p>}
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .exposicoes__list { list-style: none; padding: 0; margin-block: var(--space-4); }
+  .exposicoes__item { border-top: 1px solid var(--color-line); padding-block: var(--space-3); }
+  .exposicoes__item a { display: grid; grid-template-columns: 10rem 1fr; gap: var(--space-3); align-items: center; }
+  .exposicoes__capa { width: 100%; height: auto; display: block; }
+  .exposicoes__periodo { color: var(--color-muted); }
+  .exposicoes__titulo { font-family: var(--font-display); font-size: 1.3rem; margin: var(--space-1) 0; }
+  .exposicoes__local { color: var(--color-muted); margin: 0; }
+  @media (max-width: 640px) {
+    .exposicoes__item a { grid-template-columns: 1fr; }
+  }
+</style>

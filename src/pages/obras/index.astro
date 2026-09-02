@@ -1,0 +1,41 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import WorkCard from '@/components/WorkCard.astro';
+import { sanity, QUERY_OBRAS_POR_SERIE } from '@/lib/sanity';
+
+const series = await sanity.fetch(QUERY_OBRAS_POR_SERIE);
+---
+<BaseLayout title="Obras" locale="pt">
+  <div class="container">
+    {series.map((serie: any) => (
+      <section class="serie-section">
+        <h2>{serie.titulo?.pt}</h2>
+        <div class="serie-grid">
+          {serie.obras.map((obra: any) => (
+            <WorkCard
+              titulo={obra.titulo?.pt}
+              ano={obra.ano}
+              tecnica={obra.tecnica?.pt}
+              imagemUrl={obra.imagemPrincipal}
+              href={`/obras/${serie.slug.current}/${obra.slug.current}`}
+              locale="pt"
+            />
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .serie-section { margin-block: var(--space-4); }
+  /* Galeria "justified" simples via columns — respeita a proporção de cada obra,
+     sem forçar recorte em grade quadrada */
+  .serie-grid {
+    columns: 3 18rem;
+    column-gap: var(--space-3);
+  }
+  @media (max-width: 640px) {
+    .serie-grid { columns: 1; }
+  }
+</style>

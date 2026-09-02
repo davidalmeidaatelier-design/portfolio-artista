@@ -1,0 +1,132 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_OBRA_POR_SLUG } from '@/lib/sanity';
+import { blocksToParagraphs } from '@/lib/sanity';
+
+export async function getStaticPaths() {
+  const obras = await sanity.fetch(`
+    *[
+      _type == "obra" &&
+      publicado == true &&
+      defined(slug.current) &&
+      defined(serie)
+    ] {
+      "obra": slug.current,
+      "serie": serie->slug.current
+    }
+  `);
+
+  return obras
+    .filter((item) => item.obra && item.serie)
+    .map((item) => ({
+      params: {
+        serie: item.serie,
+        obra: item.obra,
+      },
+    }));
+}
+
+const { obra: slug } = Astro.params;
+const obra = await sanity.fetch(QUERY_OBRA_POR_SLUG, { slug });
+
+if (!obra) return Astro.redirect('/obras');
+
+const paragrafosDescricao = blocksToParagraphs(obra.descricao?.pt);
+---
+
+<BaseLayout title={obra.titulo?.pt} locale="pt">
+  <article class="container obra-page">
+    <div class="obra-page__imagens">
+      {obra.imagens?.map((imagem) => (
+        <div class="obra-page__imagem">
+          <img
+            src={imagem.url}
+            alt={imagem.alt?.pt || obra.titulo?.pt}
+          />
+        </div>
+      ))}
+    </div>
+
+    <aside class="obra-page__info">
+      <h1>{paragrafosDescricao.map((p) => <p>{p}</p>)}</h1>
+
+      <dl class="ficha-tecnica">
+        {obra.ano && (
+          <div>
+            <dt>Ano</dt>
+            <dd>{obra.ano}</dd>
+          </div>
+        )}
+
+        {obra.tecnica?.pt && (
+          <div>
+            <dt>Técnica</dt>
+            <dd>{obra.tecnica.pt}</dd>
+          </div>
+        )}
+
+        {obra.dimensoes && (
+          <div>
+            <dt>Dimensões</dt>
+            <dd>{obra.dimensoes}</dd>
+          </div>
+        )}
+
+        {obra.serie?.titulo?.pt && (
+          <div>
+            <dt>Série</dt>
+            <dd>
+              <a href={`/obras/${obra.serie.slug.current}`}>
+                {obra.serie.titulo.pt}
+              </a>
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      {obra.descricao?.pt && (
+        <div class="obra-page__descricao">
+          {obra.descricao.pt}
+        </div>
+      )}
+
+      {obra.vinculadaLoja && obra.disponibilidade && (
+        <p class="obra-page__venda">
+          Consultar disponibilidade.
+        </p>
+      )}
+    </aside>
+  </article>
+</BaseLayout>
+
+<style>
+  .obra-page {
+    display: grid;
+    grid-template-columns: 1fr 18rem;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    align-items: start;
+  }
+
+  .obra-page__imagens {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .obra-page__imagem {
+    width: 100%;
+  }
+
+  .obra-page__imagem img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .obra-page {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

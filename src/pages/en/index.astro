@@ -1,0 +1,189 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  sanity,
+  QUERY_EXPOSICAO_DESTAQUE,
+  QUERY_OBRA_RECENTE,
+  QUERY_TEXTO_RECENTE,
+  QUERY_AGENDA_RECENTE
+} from '../../lib/sanity';
+
+const exposicao = await sanity.fetch(QUERY_EXPOSICAO_DESTAQUE);
+const obra = await sanity.fetch(QUERY_OBRA_RECENTE);
+const texto = await sanity.fetch(QUERY_TEXTO_RECENTE);
+const agenda = await sanity.fetch(QUERY_AGENDA_RECENTE);
+---
+
+<BaseLayout title="David Almeida" locale="en">
+
+  {exposicao && (
+    <section class="destaque">
+
+      <p class="destaque__eyebrow">Exhibition</p>
+
+      {exposicao.capa && (
+        <a href={`/en/exhibitions/${exposicao.slug?.current}`}>
+          <img
+            src={exposicao.capa}
+            alt={exposicao.titulo?.en || exposicao.titulo?.pt}
+            class="destaque__imagem"
+          />
+        </a>
+      )}
+
+      <div class="destaque__info">
+
+        <h1 class="destaque__titulo">
+          {exposicao.titulo?.en || exposicao.titulo?.pt}
+        </h1>
+
+        {exposicao.local && (
+          <div class="ficha-tecnica destaque__meta">
+            {exposicao.local?.en || exposicao.local?.pt}
+          </div>
+        )}
+
+        <a
+          href={`/en/exhibitions/${exposicao.slug?.current}`}
+          class="destaque__link"
+        >
+          View full exhibition →
+        </a>
+
+      </div>
+
+    </section>
+  )}
+
+  {(obra || texto || agenda) && (
+    <section class="recentes">
+
+      {obra && (
+        <a
+          href={`/en/works/${obra.serie?.slug?.current}/${obra.slug?.current}`}
+          class="recentes__item"
+        >
+          <span class="ficha-tecnica recentes__tipo">Work</span>
+
+          <span class="recentes__titulo">
+            {obra.titulo?.en || obra.titulo?.pt}
+          </span>
+        </a>
+      )}
+
+      {texto && (
+        <a
+          href={`/en/texts/${texto.slug?.current}`}
+          class="recentes__item"
+        >
+          <span class="ficha-tecnica recentes__tipo">Text</span>
+
+          <span class="recentes__titulo">
+            {texto.titulo?.en || texto.titulo?.pt}
+          </span>
+        </a>
+      )}
+
+      {agenda && (
+        <a
+          href="/en/agenda"
+          class="recentes__item"
+        >
+          <span class="ficha-tecnica recentes__tipo">Agenda</span>
+
+          <span class="recentes__titulo">
+            {agenda.titulo?.en || agenda.titulo?.pt}
+          </span>
+        </a>
+      )}
+
+    </section>
+  )}
+
+  <section class="obras-cta">
+    <a href="/en/works">View all works →</a>
+  </section>
+
+</BaseLayout>
+
+<style>
+  .destaque {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .destaque__eyebrow {
+    color: var(--color-muted);
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+
+  .destaque__imagem {
+    width: 50%;
+    max-width: 50%;
+    height: auto;
+    display: block;
+    margin: 0 auto var(--space-3);
+  }
+
+  .destaque__info {
+    max-width: 900px;
+  }
+
+  .destaque__titulo {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    margin: 0 0 var(--space-2);
+  }
+
+  .destaque__meta {
+    color: var(--color-muted);
+    margin-bottom: var(--space-2);
+  }
+
+  .destaque__link {
+    display: inline-block;
+    margin-top: var(--space-2);
+  }
+
+  .recentes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+  }
+
+  .recentes__item {
+    display: block;
+  }
+
+  .recentes__tipo {
+    color: var(--color-muted);
+    display: block;
+    margin-bottom: var(--space-1);
+  }
+
+  .recentes__titulo {
+    display: block;
+    font-size: 1.1rem;
+  }
+
+  .obras-cta {
+    padding-block: var(--space-4);
+  }
+
+  @media (max-width: 768px) {
+    .destaque__imagem {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .destaque__titulo {
+      font-size: 1.5rem;
+    }
+
+    .recentes {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,31 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_TEXTOS } from '@/lib/sanity';
+
+const textos = await sanity.fetch(QUERY_TEXTOS);
+---
+<BaseLayout title="Textos" locale="pt">
+  <div class="container">
+    <h1>Textos</h1>
+    <ul class="textos__list">
+      {textos.map((t: any) => (
+        <li class="textos__item">
+          <a href={`/textos/${t.slug.current}`}>
+            <h2 class="textos__titulo">{t.titulo?.pt}</h2>
+            <span class="ficha-tecnica textos__autor">
+              {t.autor}
+              {t.projetoRelacionado && ` · ${t.projetoRelacionado.titulo?.pt}`}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .textos__list { list-style: none; padding: 0; margin-block: var(--space-4); }
+  .textos__item { border-top: 1px solid var(--color-line); padding-block: var(--space-3); }
+  .textos__titulo { font-family: var(--font-display); font-size: 1.2rem; margin: 0 0 var(--space-1); }
+  .textos__autor { color: var(--color-muted); }
+</style>

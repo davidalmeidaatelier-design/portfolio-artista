@@ -1,0 +1,86 @@
+---
+interface Props {
+  locale: 'pt' | 'en';
+}
+
+const { locale } = Astro.props;
+
+const t =
+  locale === 'pt'
+    ? {
+        newsletter: 'Receber novidades por e-mail',
+      }
+    : {
+        follow: 'Follow',
+        newsletter: 'Get updates by email',
+      };
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+
+    <div class="site-footer__social">
+      <span class="ficha-tecnica">{t.follow}</span>
+
+      <a
+        href="https://instagram.com/almeidadavid/"
+        target="_blank"
+        rel="noopener"
+      >
+        Instagram
+      </a>
+
+      <a
+        target="_blank"
+href="https://youtu.be/oRrfft3APFs?si=njMlHVIh7LqJQe75"
+        rel="noopener"
+      >
+        YouTube
+      </a>
+
+      <a
+        href="https://substack.com/@davidalmeidastudio"
+        target="_blank"
+        rel="noopener"
+      >
+        Substack
+      </a>
+    </div>
+
+    <a
+      href="https://davidalmeidastudio.substack.com/subscribe?next=https%3A%2F%2Fsubstack.com%2F%40davidalmeidastudio%3Futm_source%3Dtop_search&utm_source=profile-page&utm_medium=web&utm_campaign=substack_profile&just_signed_up=true"
+      target="_blank"
+      rel="noopener"
+      class="site-footer__newsletter"
+    >
+      {t.newsletter} ↗
+    </a>
+
+  </div>
+</footer>
+
+<style>
+.site-footer {
+  border-top: 1px solid var(--color-line);
+  margin-top: var(--space-5);
+}
+
+.site-footer__inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+}
+
+.site-footer__social {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.site-footer__newsletter {
+  text-decoration: none;
+}
+</style>
