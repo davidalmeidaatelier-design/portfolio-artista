@@ -50,7 +50,45 @@ function textoParaParagrafos(texto: any) {
     .filter(Boolean);
 }
 
+function youtubeEmbedUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+
+    if (parsed.hostname === 'youtu.be') {
+      const videoId = parsed.pathname.replace('/', '');
+
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+
+    if (
+      parsed.hostname === 'www.youtube.com' ||
+      parsed.hostname === 'youtube.com' ||
+      parsed.hostname === 'm.youtube.com'
+    ) {
+      const videoId = parsed.searchParams.get('v');
+
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+
+      if (parsed.pathname.startsWith('/embed/')) {
+        return url;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 const paragrafosTexto = textoParaParagrafos(textoExposicao);
+
+const videos = (exposicao.videos || [])
+  .map((video: string) => youtubeEmbedUrl(video))
+  .filter(Boolean);
 ---
 
 <BaseLayout
@@ -168,6 +206,27 @@ const paragrafosTexto = textoParaParagrafos(textoExposicao);
     </section>
 
 
+    {videos.length > 0 && (
+      <section class="exposicao-page__videos">
+
+        <h2>Videos</h2>
+
+        {videos.map((video: string) => (
+          <div class="exposicao-page__video">
+            <iframe
+              src={video}
+              title="Exhibition video"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+          </div>
+        ))}
+
+      </section>
+    )}
+
+
     {paragrafosTexto.length > 0 && (
       <section
         id="texto-exposicao"
@@ -228,6 +287,29 @@ const paragrafosTexto = textoParaParagrafos(textoExposicao);
     height: auto;
   }
 
+  .exposicao-page__videos {
+    margin-bottom: 8rem;
+  }
+
+  .exposicao-page__videos h2 {
+    margin-top: 0;
+    margin-bottom: 3rem;
+  }
+
+  .exposicao-page__video {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 5rem;
+  }
+
+  .exposicao-page__video iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
   .exposicao-page__texto {
     max-width: 620px;
     margin-top: 2rem;
@@ -250,6 +332,14 @@ const paragrafosTexto = textoParaParagrafos(textoExposicao);
 
     .exposicao-page__imagem {
       margin-bottom: 4rem;
+    }
+
+    .exposicao-page__videos {
+      margin-bottom: 5rem;
+    }
+
+    .exposicao-page__video {
+      margin-bottom: 3rem;
     }
 
     .exposicao-page__texto {
