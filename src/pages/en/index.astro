@@ -1,115 +1,120 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import {
-  sanity,
-  QUERY_EXPOSICAO_DESTAQUE,
-  QUERY_OBRA_RECENTE,
-  QUERY_TEXTO_RECENTE,
-  QUERY_AGENDA_RECENTE
-} from '../../lib/sanity';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity } from '@/lib/sanity';
 
-const exposicao = await sanity.fetch(QUERY_EXPOSICAO_DESTAQUE);
-const obra = await sanity.fetch(QUERY_OBRA_RECENTE);
-const texto = await sanity.fetch(QUERY_TEXTO_RECENTE);
-const agenda = await sanity.fetch(QUERY_AGENDA_RECENTE);
+const exposicoes = await sanity.fetch(`
+  *[
+    _type == "projeto" &&
+    categoria == "exposicao" &&
+    publicado == true &&
+    status == "atual"
+  ] | order(dataInicio desc) {
+    _id,
+    titulo,
+    slug,
+    local,
+    dataInicio,
+    dataFim,
+    "capa": imagensMontagem[0].asset->url
+  }
+`);
 ---
 
-<BaseLayout title="David Almeida" locale="en">
+<BaseLayout title="Home" locale="en">
+  <div class="container">
 
-  {exposicao && (
-    <section class="destaque">
+    {(exposicoes ?? []).length > 0 && (
+      <section class="destaque" aria-label="Current exhibitions">
+        <span class="ficha-tecnica destaque__eyebrow">
+          Current exhibitions
+        </span>
 
-      <p class="destaque__eyebrow">Exhibition</p>
+        <div class="carousel" data-carousel>
+          <div class="carousel__viewport">
+            <div class="carousel__track" data-carousel-track>
 
-      {exposicao.capa && (
-        <a href={`/en/exhibitions/${exposicao.slug?.current}`}>
-          <img
-            src={exposicao.capa}
-            alt={exposicao.titulo?.en || exposicao.titulo?.pt}
-            class="destaque__imagem"
-          />
-        </a>
-      )}
+              {(exposicoes ?? []).map((exposicao: any) => (
+                <article class="carousel__slide">
 
-      <div class="destaque__info">
+                  <a
+                    href={`/en/exhibitions/${exposicao.slug?.current}`}
+                    class="carousel__imagem-link"
+                  >
+                    {exposicao.capa && (
+                      <img
+                        src={exposicao.capa}
+                        alt={exposicao.titulo?.en || exposicao.titulo?.pt || ''}
+                        class="destaque__imagem"
+                        loading="eager"
+                      />
+                    )}
+                  </a>
 
-        <h1 class="destaque__titulo">
-          {exposicao.titulo?.en || exposicao.titulo?.pt}
-        </h1>
+                  <div class="destaque__info">
+                    <h1 class="destaque__titulo">
+                      {exposicao.titulo?.en || exposicao.titulo?.pt}
+                    </h1>
 
-        {exposicao.local && (
-          <div class="ficha-tecnica destaque__meta">
-            {exposicao.local?.en || exposicao.local?.pt}
+                    {(exposicao.local?.en || exposicao.local?.pt) && (
+                      <div class="ficha-tecnica destaque__meta">
+                        {exposicao.local?.en || exposicao.local?.pt}
+                      </div>
+                    )}
+
+                    <a
+                      href={`/en/exhibitions/${exposicao.slug?.current}`}
+                      class="destaque__link"
+                    >
+                      View full exhibition →
+                    </a>
+                  </div>
+
+                </article>
+              ))}
+
+            </div>
           </div>
-        )}
 
-        <a
-          href={`/en/exhibitions/${exposicao.slug?.current}`}
-          class="destaque__link"
-        >
-          View full exhibition →
-        </a>
+          {(exposicoes ?? []).length > 1 && (
+            <div class="carousel__controls">
+              <button
+                type="button"
+                class="carousel__button"
+                data-carousel-prev
+                aria-label="Previous exhibition"
+              >
+                ←
+              </button>
 
-      </div>
+              <span
+                class="carousel__counter"
+                data-carousel-counter
+                aria-live="polite"
+              >
+                1 / {(exposicoes ?? []).length}
+              </span>
 
-    </section>
-  )}
+              <button
+                type="button"
+                class="carousel__button"
+                data-carousel-next
+                aria-label="Next exhibition"
+              >
+                →
+              </button>
+            </div>
+          )}
 
-  {(obra || texto || agenda) && (
-    <section class="recentes">
+        </div>
+      </section>
+    )}
 
-      {obra && (
-        <a
-          href={`/en/works/${obra.serie?.slug?.current}/${obra.slug?.current}`}
-          class="recentes__item"
-        >
-          <span class="ficha-tecnica recentes__tipo">Work</span>
-
-          <span class="recentes__titulo">
-            {obra.titulo?.en || obra.titulo?.pt}
-          </span>
-        </a>
-      )}
-
-      {texto && (
-        <a
-          href={`/en/texts/${texto.slug?.current}`}
-          class="recentes__item"
-        >
-          <span class="ficha-tecnica recentes__tipo">Text</span>
-
-          <span class="recentes__titulo">
-            {texto.titulo?.en || texto.titulo?.pt}
-          </span>
-        </a>
-      )}
-
-      {agenda && (
-        <a
-          href="/en/agenda"
-          class="recentes__item"
-        >
-          <span class="ficha-tecnica recentes__tipo">Agenda</span>
-
-          <span class="recentes__titulo">
-            {agenda.titulo?.en || agenda.titulo?.pt}
-          </span>
-        </a>
-      )}
-
-    </section>
-  )}
-
-  <section class="obras-cta">
-    <a href="/en/works">View all works →</a>
-  </section>
-
+  </div>
 </BaseLayout>
 
 <style>
   .destaque {
     padding-block: var(--space-4);
-    border-bottom: 1px solid var(--color-line);
   }
 
   .destaque__eyebrow {
@@ -118,72 +123,130 @@ const agenda = await sanity.fetch(QUERY_AGENDA_RECENTE);
     margin-bottom: var(--space-2);
   }
 
-  .destaque__imagem {
-    width: 50%;
-    max-width: 50%;
-    height: auto;
-    display: block;
-    margin: 0 auto var(--space-3);
+  .carousel {
+    position: relative;
   }
 
-  .destaque__info {
-    max-width: 900px;
+  .carousel__viewport {
+    overflow: hidden;
+  }
+
+  .carousel__track {
+    display: flex;
+    transition: transform 450ms ease;
+    will-change: transform;
+  }
+
+  .carousel__slide {
+    min-width: 100%;
+    display: grid;
+    grid-template-columns: 1.5fr 0.5fr;
+    gap: var(--space-4);
+    align-items: center;
+  }
+
+  .carousel__imagem-link {
+    display: block;
+  }
+
+  .destaque__imagem {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    display: block;
+    object-fit: cover;
   }
 
   .destaque__titulo {
     font-family: var(--font-display);
-    font-size: 1.6rem;
+    font-size: 1.45rem;
+    line-height: 1.12;
     margin: 0 0 var(--space-2);
   }
 
   .destaque__meta {
     color: var(--color-muted);
     margin-bottom: var(--space-2);
+    line-height: 1.4;
   }
 
   .destaque__link {
     display: inline-block;
+    margin-top: var(--space-1);
+    font-size: 0.8rem;
+  }
+
+  .carousel__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     margin-top: var(--space-2);
   }
 
-  .recentes {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-3);
-    padding-block: var(--space-4);
+  .carousel__button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0.15rem;
+    font: inherit;
+    cursor: pointer;
+    line-height: 1;
   }
 
-  .recentes__item {
-    display: block;
-  }
-
-  .recentes__tipo {
+  .carousel__counter {
+    font-size: 0.7rem;
     color: var(--color-muted);
-    display: block;
-    margin-bottom: var(--space-1);
-  }
-
-  .recentes__titulo {
-    display: block;
-    font-size: 1.1rem;
-  }
-
-  .obras-cta {
-    padding-block: var(--space-4);
+    font-family: var(--font-mono);
   }
 
   @media (max-width: 768px) {
-    .destaque__imagem {
-      width: 100%;
-      max-width: 100%;
+    .carousel__slide {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
     }
 
     .destaque__titulo {
-      font-size: 1.5rem;
+      font-size: 1.35rem;
     }
+  }
 
-    .recentes {
-      grid-template-columns: 1fr;
+  @media (prefers-reduced-motion: reduce) {
+    .carousel__track {
+      transition: none;
     }
   }
 </style>
+
+<script>
+  const carousel = document.querySelector('[data-carousel]');
+
+  if (carousel) {
+    const track = carousel.querySelector('[data-carousel-track]');
+    const slides = carousel.querySelectorAll('.carousel__slide');
+    const previous = carousel.querySelector('[data-carousel-prev]');
+    const next = carousel.querySelector('[data-carousel-next]');
+    const counter = carousel.querySelector('[data-carousel-counter]');
+
+    let current = 0;
+
+    const update = () => {
+      if (!track) return;
+
+      track.style.transform = `translateX(-${current * 100}%)`;
+
+      if (counter) {
+        counter.textContent = `${current + 1} / ${slides.length}`;
+      }
+    };
+
+    previous?.addEventListener('click', () => {
+      current = current === 0 ? slides.length - 1 : current - 1;
+      update();
+    });
+
+    next?.addEventListener('click', () => {
+      current = current === slides.length - 1 ? 0 : current + 1;
+      update();
+    });
+  }
+</script>

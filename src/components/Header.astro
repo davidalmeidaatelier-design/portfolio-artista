@@ -4,21 +4,21 @@ const { locale } = Astro.props;
 
 const nav = {
   pt: [
+    { href: '/sobre', label: 'Artista' },
     { href: '/obras', label: 'Obras' },
-    { href: '/projetos', label: 'Projetos' },
     { href: '/exposicoes', label: 'Exposições' },
+    { href: '/projetos', label: 'Projetos' },
     { href: '/agenda', label: 'Agenda' },
     { href: '/textos', label: 'Textos' },
-    { href: '/sobre', label: 'Sobre' },
     { href: '/contato', label: 'Contato' },
   ],
   en: [
+    { href: '/en/about', label: 'Artist' },
     { href: '/en/works', label: 'Works' },
-    { href: '/en/projects', label: 'Projects' },
     { href: '/en/exhibitions', label: 'Exhibitions' },
+    { href: '/en/projects', label: 'Projects' },
     { href: '/en/agenda', label: 'Agenda' },
     { href: '/en/texts', label: 'Texts' },
-    { href: '/en/about', label: 'About' },
     { href: '/en/contact', label: 'Contact' },
   ],
 };
@@ -50,7 +50,7 @@ const otherLocaleLabel = locale === 'pt' ? 'EN' : 'PT';
   }
   .site-header__mark {
     font-family: var(--font-display);
-    font-size: 1.1rem;
+    font-size: 1.25rem;
   }
   .site-header__nav {
     display: flex;

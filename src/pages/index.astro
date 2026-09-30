@@ -1,103 +1,252 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import {
-  sanity,
-  QUERY_EXPOSICAO_DESTAQUE,
-  QUERY_OBRA_RECENTE,
-  QUERY_TEXTO_RECENTE,
-  QUERY_AGENDA_RECENTE,
-  blocksToParagraphs,
-} from '@/lib/sanity';
+import { sanity } from '@/lib/sanity';
 
-const exposicaoDestaque = await sanity.fetch(QUERY_EXPOSICAO_DESTAQUE);
-const obraRecente = await sanity.fetch(QUERY_OBRA_RECENTE);
-const textoRecente = await sanity.fetch(QUERY_TEXTO_RECENTE);
-const agendaRecente = await sanity.fetch(QUERY_AGENDA_RECENTE);
-
-const paragrafosExposicao = blocksToParagraphs(exposicaoDestaque?.texto?.pt).slice(0, 1);
-
-function periodo(ex: any) {
-  const ini = ex?.dataInicio ? new Date(ex.dataInicio).getFullYear() : null;
-  const fim = ex?.dataFim ? new Date(ex.dataFim).getFullYear() : null;
-  if (!ini) return '';
-  if (!fim || fim === ini) return String(ini);
-  return `${ini}–${fim}`;
-}
+const exposicoes = await sanity.fetch(`
+  *[
+    _type == "projeto" &&
+    categoria == "exposicao" &&
+    publicado == true &&
+    status == "atual"
+  ] | order(dataInicio desc) {
+    _id,
+    titulo,
+    slug,
+    local,
+    dataInicio,
+    dataFim,
+    "capa": imagensMontagem[0].asset->url
+  }
+`);
 ---
+
 <BaseLayout title="Início" locale="pt">
   <div class="container">
 
-    {exposicaoDestaque && (
-      <section class="destaque">
-        <span class="ficha-tecnica destaque__eyebrow">Exposição</span>
-        <div class="destaque__grid">
-          {exposicaoDestaque.capa && (
-            <a href={`/exposicoes/${exposicaoDestaque.slug.current}`}>
-              <img src={exposicaoDestaque.capa} alt={exposicaoDestaque.titulo?.pt} class="destaque__imagem" />
-            </a>
-          )}
-          <div class="destaque__info">
-            <h1 class="destaque__titulo">{exposicaoDestaque.titulo?.pt}</h1>
-            <div class="ficha-tecnica destaque__meta">
-              {exposicaoDestaque.local?.pt}
-              {periodo(exposicaoDestaque) && ` · ${periodo(exposicaoDestaque)}`}
+    {exposicoes.length > 0 && (
+      <section class="destaque" aria-label="Exposições em andamento">
+        <span class="ficha-tecnica destaque__eyebrow">
+          Exposições em andamento
+        </span>
+
+        <div class="carousel" data-carousel>
+          <div class="carousel__viewport">
+            <div class="carousel__track" data-carousel-track>
+
+              {exposicoes.map((exposicao: any) => (
+                <article class="carousel__slide">
+
+                  <a
+                    href={`/exposicoes/${exposicao.slug.current}`}
+                    class="carousel__imagem-link"
+                  >
+                    {exposicao.capa && (
+                      <img
+                        src={exposicao.capa}
+                        alt={exposicao.titulo?.pt}
+                        class="destaque__imagem"
+                        loading="eager"
+                      />
+                    )}
+                  </a>
+
+                  <div class="destaque__info">
+                    <h1 class="destaque__titulo">
+                      {exposicao.titulo?.pt}
+                    </h1>
+
+                    {exposicao.local?.pt && (
+                      <div class="ficha-tecnica destaque__meta">
+                        {exposicao.local.pt}
+                      </div>
+                    )}
+
+                    <a
+                      href={`/exposicoes/${exposicao.slug.current}`}
+                      class="destaque__link"
+                    >
+                      Ver exposição completa →
+                    </a>
+                  </div>
+
+                </article>
+              ))}
+
             </div>
-            {paragrafosExposicao.map((p) => <p>{p}</p>)}
-            <a href={`/exposicoes/${exposicaoDestaque.slug.current}`} class="destaque__link">Ver exposição completa →</a>
           </div>
+
+          {exposicoes.length > 1 && (
+            <div class="carousel__controls">
+              <button
+                type="button"
+                class="carousel__button"
+                data-carousel-prev
+                aria-label="Exposição anterior"
+              >
+                ←
+              </button>
+
+              <span
+                class="carousel__counter"
+                data-carousel-counter
+                aria-live="polite"
+              >
+                1 / {exposicoes.length}
+              </span>
+
+              <button
+                type="button"
+                class="carousel__button"
+                data-carousel-next
+                aria-label="Próxima exposição"
+              >
+                →
+              </button>
+            </div>
+          )}
+
         </div>
       </section>
     )}
-
-    {(obraRecente || textoRecente || agendaRecente) && (
-      <section class="recentes">
-        {obraRecente && (
-          <a href={`/obras/${obraRecente.serie?.slug?.current}/${obraRecente.slug.current}`} class="recentes__item">
-            {obraRecente.imagemPrincipal && <img src={obraRecente.imagemPrincipal} alt={obraRecente.titulo?.pt} />}
-            <span class="recentes__titulo">{obraRecente.titulo?.pt}</span>
-          </a>
-        )}
-        {textoRecente && (
-          <a href={`/textos/${textoRecente.slug.current}`} class="recentes__item">
-            <span class="ficha-tecnica recentes__tipo">Texto</span>
-            <span class="recentes__titulo">{textoRecente.titulo?.pt}</span>
-          </a>
-        )}
-        {agendaRecente && (
-          <a href={agendaRecente.projetoRelacionado ? `/exposicoes/${agendaRecente.projetoRelacionado.slug.current}` : '/agenda'} class="recentes__item">
-            <span class="ficha-tecnica recentes__tipo">Agenda</span>
-            <span class="recentes__titulo">{agendaRecente.titulo?.pt}</span>
-          </a>
-        )}
-      </section>
-    )}
-
-    <section class="obras-cta">
-      <a href="/obras">Ver todas as obras →</a>
-    </section>
 
   </div>
 </BaseLayout>
 
 <style>
-  .destaque { padding-block: var(--space-4); border-bottom: 1px solid var(--color-line); }
-  .destaque__eyebrow { color: var(--color-muted); display: block; margin-bottom: var(--space-2); }
-  .destaque__grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: var(--space-4); align-items: center; }
-  .destaque__imagem { width: 100%; height: auto; display: block; }
-  .destaque__titulo { font-family: var(--font-display); font-size: 2rem; margin: 0 0 var(--space-2); }
-  .destaque__meta { color: var(--color-muted); margin-bottom: var(--space-2); }
-  .destaque__link { display: inline-block; margin-top: var(--space-2); }
+  .destaque {
+    padding-block: var(--space-4);
+  }
 
-  .recentes { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); padding-block: var(--space-4); border-bottom: 1px solid var(--color-line); }
-  .recentes__item { display: block; }
-  .recentes__item img { width: 100%; height: auto; display: block; margin-bottom: var(--space-1); }
-  .recentes__tipo { color: var(--color-muted); display: block; margin-bottom: var(--space-1); }
-  .recentes__titulo { font-family: var(--font-display); font-size: 1.1rem; }
+  .destaque__eyebrow {
+    color: var(--color-muted);
+    display: block;
+    margin-bottom: var(--space-2);
+  }
 
-  .obras-cta { padding-block: var(--space-4); }
+  .carousel {
+    position: relative;
+  }
+
+  .carousel__viewport {
+    overflow: hidden;
+  }
+
+  .carousel__track {
+    display: flex;
+    transition: transform 450ms ease;
+    will-change: transform;
+  }
+
+  .carousel__slide {
+    min-width: 100%;
+    display: grid;
+    grid-template-columns: 1.5fr 0.5fr;
+    gap: var(--space-4);
+    align-items: center;
+  }
+
+  .carousel__imagem-link {
+    display: block;
+  }
+
+  .destaque__imagem {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+
+  .destaque__titulo {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    line-height: 1.12;
+    margin: 0 0 var(--space-2);
+  }
+
+  .destaque__meta {
+    color: var(--color-muted);
+    margin-bottom: var(--space-2);
+    line-height: 1.4;
+  }
+
+  .destaque__link {
+    display: inline-block;
+    margin-top: var(--space-1);
+    font-size: 0.8rem;
+  }
+
+  .carousel__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+
+  .carousel__button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0.15rem;
+    font: inherit;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .carousel__counter {
+    font-size: 0.7rem;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+  }
 
   @media (max-width: 768px) {
-    .destaque__grid { grid-template-columns: 1fr; }
-    .recentes { grid-template-columns: 1fr; }
+    .carousel__slide {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+
+    .destaque__titulo {
+      font-size: 1.35rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .carousel__track {
+      transition: none;
+    }
   }
 </style>
+
+<script>
+  const carousel = document.querySelector('[data-carousel]');
+
+  if (carousel) {
+    const track = carousel.querySelector('[data-carousel-track]');
+    const slides = carousel.querySelectorAll('.carousel__slide');
+    const previous = carousel.querySelector('[data-carousel-prev]');
+    const next = carousel.querySelector('[data-carousel-next]');
+    const counter = carousel.querySelector('[data-carousel-counter]');
+
+    let current = 0;
+
+    const update = () => {
+      if (!track) return;
+
+      track.style.transform = `translateX(-${current * 100}%)`;
+
+      if (counter) {
+        counter.textContent = `${current + 1} / ${slides.length}`;
+      }
+    };
+
+    previous?.addEventListener('click', () => {
+      current = current === 0 ? slides.length - 1 : current - 1;
+      update();
+    });
+
+    next?.addEventListener('click', () => {
+      current = current === slides.length - 1 ? 0 : current + 1;
+      update();
+    });
+  }
+</script>

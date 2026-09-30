@@ -1,5 +1,6 @@
 import {defineType, defineField} from 'sanity'
 import {MultiImageInput} from '../components/MultiImageInput'
+import {AutoCreditInput} from '../components/AutoCreditInput'
 
 export default defineType({
   name: 'projeto',
@@ -85,6 +86,10 @@ export default defineType({
       type: 'localeText',
     }),
 
+    // --------------------------------------------------
+    // IMAGENS DAS OBRAS
+    // --------------------------------------------------
+
     defineField({
       name: 'imagensObras',
       title: 'Imagens das obras',
@@ -101,6 +106,24 @@ export default defineType({
         },
       ],
     }),
+
+    defineField({
+      name: 'creditoFotosObras',
+      title: 'Crédito das fotografias das obras',
+      type: 'string',
+      options: {
+        imagesField: 'imagensObras',
+      },
+      components: {
+        input: AutoCreditInput,
+      },
+      description:
+        'Preenchido automaticamente com o nome do primeiro arquivo de imagem. Você pode editar este campo livremente.',
+    }),
+
+    // --------------------------------------------------
+    // IMAGENS DA MONTAGEM / VISTAS
+    // --------------------------------------------------
 
     defineField({
       name: 'imagensMontagem',
@@ -120,6 +143,24 @@ export default defineType({
     }),
 
     defineField({
+      name: 'creditoFotosVistas',
+      title: 'Crédito das fotografias das vistas',
+      type: 'string',
+      options: {
+        imagesField: 'imagensMontagem',
+      },
+      components: {
+        input: AutoCreditInput,
+      },
+      description:
+        'Preenchido automaticamente com o nome do primeiro arquivo de imagem. Você pode editar este campo livremente.',
+    }),
+
+    // --------------------------------------------------
+    // IMAGENS DE DETALHE
+    // --------------------------------------------------
+
+    defineField({
       name: 'imagensDetalhe',
       title: 'Imagens de detalhe',
       type: 'array',
@@ -135,6 +176,24 @@ export default defineType({
         },
       ],
     }),
+
+    defineField({
+      name: 'creditoFotosDetalhes',
+      title: 'Crédito das fotografias de detalhes',
+      type: 'string',
+      options: {
+        imagesField: 'imagensDetalhe',
+      },
+      components: {
+        input: AutoCreditInput,
+      },
+      description:
+        'Preenchido automaticamente com o nome do primeiro arquivo de imagem. Você pode editar este campo livremente.',
+    }),
+
+    // --------------------------------------------------
+    // OUTRAS IMAGENS
+    // --------------------------------------------------
 
     defineField({
       name: 'imagensOutras',
@@ -154,6 +213,24 @@ export default defineType({
     }),
 
     defineField({
+      name: 'creditoFotosOutras',
+      title: 'Crédito das outras fotografias',
+      type: 'string',
+      options: {
+        imagesField: 'imagensOutras',
+      },
+      components: {
+        input: AutoCreditInput,
+      },
+      description:
+        'Preenchido automaticamente com o nome do primeiro arquivo de imagem. Você pode editar este campo livremente.',
+    }),
+
+    // --------------------------------------------------
+    // VÍDEOS
+    // --------------------------------------------------
+
+    defineField({
       name: 'videos',
       title: 'Vídeos (URLs de embed)',
       type: 'array',
@@ -163,6 +240,10 @@ export default defineType({
         },
       ],
     }),
+
+    // --------------------------------------------------
+    // OBRAS RELACIONADAS
+    // --------------------------------------------------
 
     defineField({
       name: 'obrasRelacionadas',

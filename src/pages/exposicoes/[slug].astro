@@ -1,14 +1,10 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { sanity, QUERY_EXPOSICAO_POR_SLUG } from '../../lib/sanity';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { sanity, QUERY_EXPOSICAO_POR_SLUG } from '@/lib/sanity';
 
 export async function getStaticPaths() {
   const exposicoes = await sanity.fetch(`
-    *[
-      _type == "projeto" &&
-      categoria == "exposicao" &&
-      publicado == true
-    ] {
+    *[_type == "projeto" && categoria == "exposicao" && publicado == true] {
       "slug": slug.current
     }
   `);
@@ -21,86 +17,18 @@ export async function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
+const exposicao = await sanity.fetch(QUERY_EXPOSICAO_POR_SLUG, { slug });
 
-const exposicao = await sanity.fetch(
-  QUERY_EXPOSICAO_POR_SLUG,
-  { slug }
-);
-
-if (!exposicao) {
-  return Astro.redirect('/exposicoes');
-}
-
-const textoExposicao =
-  exposicao.textoPt ||
-  exposicao.textoEn ||
-  [];
-
-function textoParaParagrafos(texto: any) {
-  if (!Array.isArray(texto)) return [];
-
-  return texto
-    .filter((bloco: any) => bloco?._type === 'block')
-    .map((bloco: any) =>
-      (bloco.children || [])
-        .map((child: any) => child.text || '')
-        .join('')
-        .trim()
-    )
-    .filter(Boolean);
-}
-
-function youtubeEmbedUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-
-    if (parsed.hostname === 'youtu.be') {
-      const videoId = parsed.pathname.replace('/', '');
-
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-    }
-
-    if (
-      parsed.hostname === 'www.youtube.com' ||
-      parsed.hostname === 'youtube.com' ||
-      parsed.hostname === 'm.youtube.com'
-    ) {
-      const videoId = parsed.searchParams.get('v');
-
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-
-      if (parsed.pathname.startsWith('/embed/')) {
-        return url;
-      }
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-}
-
-const paragrafosTexto = textoParaParagrafos(textoExposicao);
-
-const videos = (exposicao.videos || [])
-  .map((video: string) => youtubeEmbedUrl(video))
-  .filter(Boolean);
+if (!exposicao) return Astro.redirect('/exposicoes');
 ---
 
-<BaseLayout
-  title={exposicao.titulo?.pt || exposicao.titulo?.en}
-  locale="pt"
->
+<BaseLayout title={exposicao.titulo?.pt} locale="pt">
   <article class="container exposicao-page">
 
     <header class="exposicao-page__header">
-      <h1>{exposicao.titulo?.pt || exposicao.titulo?.en}</h1>
+      <h1>{exposicao.titulo?.pt}</h1>
 
-      {paragrafosTexto.length > 0 && (
+      {exposicao.texto?.pt && (
         <a
           href="#texto-exposicao"
           class="exposicao-page__texto-link"
@@ -108,240 +36,381 @@ const videos = (exposicao.videos || [])
           Ler o texto da exposição ↓
         </a>
       )}
-
-      <div class="ficha-tecnica exposicao-page__meta">
-
-        {exposicao.local?.pt && (
-          <span>{exposicao.local.pt}</span>
-        )}
-
-        {exposicao.dataInicio && (
-          <span>
-            {new Date(exposicao.dataInicio).toLocaleDateString('pt-BR')}
-          </span>
-        )}
-
-        {exposicao.dataFim && (
-          <span>
-            –
-            {new Date(exposicao.dataFim).toLocaleDateString('pt-BR')}
-          </span>
-        )}
-
-      </div>
     </header>
 
+    <div class="ficha-tecnica exposicao-page__meta">
+      {exposicao.local?.pt && <span>{exposicao.local.pt}</span>}
 
-    <section class="exposicao-page__galeria">
-
-      {exposicao.imagensMontagem?.length > 0 && (
-        <>
-          <h2>Vistas da exposição</h2>
-
-          {exposicao.imagensMontagem.map((imagem: any) => (
-            <div class="exposicao-page__imagem">
-              <img
-                src={imagem.url}
-                alt=""
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </>
+      {exposicao.dataInicio && (
+        <span>
+          {new Date(exposicao.dataInicio).toLocaleDateString('pt-BR')}
+        </span>
       )}
 
-
-      {exposicao.imagensDetalhe?.length > 0 && (
-        <>
-          <h2>Detalhes</h2>
-
-          {exposicao.imagensDetalhe.map((imagem: any) => (
-            <div class="exposicao-page__imagem">
-              <img
-                src={imagem.url}
-                alt=""
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </>
+      {exposicao.dataFim && (
+        <span>
+          – {new Date(exposicao.dataFim).toLocaleDateString('pt-BR')}
+        </span>
       )}
+    </div>
 
 
-      {exposicao.imagensObras?.length > 0 && (
-        <>
-          <h2>Obras</h2>
+    {exposicao.imagensMontagem?.length > 0 && (
+      <section>
+        <h2 class="exposicao-page__secao">Vistas da exposição</h2>
 
-          {exposicao.imagensObras.map((imagem: any) => (
-            <div class="exposicao-page__imagem">
-              <img
-                src={imagem.url}
-                alt=""
-                loading="lazy"
-              />
-            </div>
+        <div class="exposicao-page__galeria-blocos">
+          {exposicao.imagensMontagem.map((img: any, i: number) => (
+            i % 3 === 0 ? (
+              <div class="galeria-bloco galeria-bloco--uma">
+                <img src={img.url} alt="" loading="lazy" />
+              </div>
+            ) : i % 3 === 1 ? (
+              <div class="galeria-bloco galeria-bloco--duas">
+                <img src={img.url} alt="" loading="lazy" />
+
+                {exposicao.imagensMontagem[i + 1] && (
+                  <img
+                    src={exposicao.imagensMontagem[i + 1].url}
+                    alt=""
+                    loading="lazy"
+                  />
+                )}
+              </div>
+            ) : null
           ))}
-        </>
-      )}
-
-
-      {exposicao.imagensOutras?.length > 0 && (
-        <>
-          <h2>Outras imagens</h2>
-
-          {exposicao.imagensOutras.map((imagem: any) => (
-            <div class="exposicao-page__imagem">
-              <img
-                src={imagem.url}
-                alt=""
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </>
-      )}
-
-    </section>
-
-
-    {videos.length > 0 && (
-      <section class="exposicao-page__videos">
-
-        <h2>Vídeos</h2>
-
-        {videos.map((video: string) => (
-          <div class="exposicao-page__video">
-            <iframe
-              src={video}
-              title="Vídeo da exposição"
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-            ></iframe>
-          </div>
-        ))}
-
+        </div>
       </section>
     )}
 
 
-    {paragrafosTexto.length > 0 && (
-      <section
-        id="texto-exposicao"
-        class="exposicao-page__texto"
-      >
-        <h2>Texto da exposição</h2>
+    {exposicao.imagensObras?.length > 0 && (
+      <section>
+        <h2 class="exposicao-page__secao">Obras</h2>
 
-        {paragrafosTexto.map((paragrafo: string) => (
-          <p>{paragrafo}</p>
-        ))}
+        <div class="exposicao-page__galeria-blocos">
+          {exposicao.imagensObras.map((img: any, i: number) => (
+            i % 3 === 0 ? (
+              <div class="galeria-bloco galeria-bloco--uma">
+                <img src={img.url} alt="" loading="lazy" />
+              </div>
+            ) : i % 3 === 1 ? (
+              <div class="galeria-bloco galeria-bloco--duas">
+                <img src={img.url} alt="" loading="lazy" />
+
+                {exposicao.imagensObras[i + 1] && (
+                  <img
+                    src={exposicao.imagensObras[i + 1].url}
+                    alt=""
+                    loading="lazy"
+                  />
+                )}
+              </div>
+            ) : null
+          ))}
+        </div>
+      </section>
+    )}
+
+
+    {exposicao.imagensDetalhe?.length > 0 && (
+      <section>
+        <h2 class="exposicao-page__secao">Detalhes</h2>
+
+        <div class="exposicao-page__galeria-blocos">
+          {exposicao.imagensDetalhe.map((img: any, i: number) => (
+            i % 3 === 0 ? (
+              <div class="galeria-bloco galeria-bloco--uma">
+                <img src={img.url} alt="" loading="lazy" />
+              </div>
+            ) : i % 3 === 1 ? (
+              <div class="galeria-bloco galeria-bloco--duas">
+                <img src={img.url} alt="" loading="lazy" />
+
+                {exposicao.imagensDetalhe[i + 1] && (
+                  <img
+                    src={exposicao.imagensDetalhe[i + 1].url}
+                    alt=""
+                    loading="lazy"
+                  />
+                )}
+              </div>
+            ) : null
+          ))}
+        </div>
+      </section>
+    )}
+
+
+    {exposicao.texto?.pt && (
+      <section id="texto-exposicao" class="exposicao-page__texto">
+        <h2 class="exposicao-page__secao">Texto de apresentação</h2>
+
+        <div class="exposicao-page__texto-conteudo">
+          {exposicao.texto.pt.map((block: any) => (
+            block?._type === 'block' && (
+              <p>
+                {block.children?.map((child: any) => child.text || '').join('')}
+              </p>
+            )
+          ))}
+        </div>
+      </section>
+    )}
+
+
+    {exposicao.obrasRelacionadas?.length > 0 && (
+      <section>
+        <h2 class="exposicao-page__secao">Obras relacionadas</h2>
+
+        <div class="exposicao-page__obras">
+          {exposicao.obrasRelacionadas.map((obra: any) => (
+            <a
+              href={`/obras/${obra.serie?.slug?.current}/${obra.slug.current}`}
+              class="exposicao-page__obra"
+            >
+              {obra.imagem && (
+                <img
+                  src={obra.imagem}
+                  alt={obra.titulo?.pt}
+                  loading="lazy"
+                />
+              )}
+
+              <span>{obra.titulo?.pt}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+
+    {exposicao.imagensOutras?.length > 0 && (
+      <section>
+        <h2 class="exposicao-page__secao">Outras imagens</h2>
+
+        <div class="exposicao-page__galeria-blocos">
+          {exposicao.imagensOutras.map((img: any, i: number) => (
+            i % 3 === 0 ? (
+              <div class="galeria-bloco galeria-bloco--uma">
+                <img src={img.url} alt="" loading="lazy" />
+              </div>
+            ) : i % 3 === 1 ? (
+              <div class="galeria-bloco galeria-bloco--duas">
+                <img src={img.url} alt="" loading="lazy" />
+
+                {exposicao.imagensOutras[i + 1] && (
+                  <img
+                    src={exposicao.imagensOutras[i + 1].url}
+                    alt=""
+                    loading="lazy"
+                  />
+                )}
+              </div>
+            ) : null
+          ))}
+        </div>
+      </section>
+    )}
+
+
+    {(exposicao.creditoFotosObras ||
+      exposicao.creditoFotosVistas ||
+      exposicao.creditoFotosDetalhes ||
+      exposicao.creditoFotosOutras) && (
+      <section class="exposicao-page__creditos">
+        <h2 class="exposicao-page__creditos-titulo">
+          Créditos das fotografias
+        </h2>
+
+        <div class="exposicao-page__creditos-lista">
+          {exposicao.creditoFotosObras && (
+            <p>
+              <strong>Foto das obras:</strong>{' '}
+              {exposicao.creditoFotosObras}
+            </p>
+          )}
+
+          {exposicao.creditoFotosVistas && (
+            <p>
+              <strong>Foto das vistas:</strong>{' '}
+              {exposicao.creditoFotosVistas}
+            </p>
+          )}
+
+          {exposicao.creditoFotosDetalhes && (
+            <p>
+              <strong>Foto dos detalhes:</strong>{' '}
+              {exposicao.creditoFotosDetalhes}
+            </p>
+          )}
+
+          {exposicao.creditoFotosOutras && (
+            <p>
+              <strong>Outras fotografias:</strong>{' '}
+              {exposicao.creditoFotosOutras}
+            </p>
+          )}
+        </div>
       </section>
     )}
 
   </article>
 </BaseLayout>
 
-
 <style>
   .exposicao-page {
-    max-width: 1100px;
+    padding-block: var(--space-4);
   }
 
   .exposicao-page__header {
-    margin-top: 3rem;
-    margin-bottom: 5rem;
+    margin-bottom: 4rem;
   }
 
   .exposicao-page__header h1 {
-    margin: 0 0 1.5rem;
+    margin-bottom: 1rem;
   }
 
   .exposicao-page__texto-link {
     display: inline-block;
-    margin-bottom: 2rem;
+    margin-top: 1.5rem;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    font-size: 0.85rem;
   }
 
   .exposicao-page__meta {
     display: flex;
-    gap: 1rem;
     flex-wrap: wrap;
+    gap: 1rem;
+    color: var(--color-muted);
   }
 
-  .exposicao-page__galeria h2 {
-    margin-top: 0;
-    margin-bottom: 3rem;
-  }
-
-  .exposicao-page__imagem {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 7rem;
-  }
-
-  .exposicao-page__imagem img {
-    display: block;
-    width: auto;
-    max-width: 100%;
-    height: auto;
-  }
-
-  .exposicao-page__videos {
-    margin-bottom: 8rem;
-  }
-
-  .exposicao-page__videos h2 {
-    margin-top: 0;
-    margin-bottom: 3rem;
-  }
-
-  .exposicao-page__video {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    margin-bottom: 5rem;
-  }
-
-  .exposicao-page__video iframe {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: 0;
-  }
-
-  .exposicao-page__texto {
-    max-width: 620px;
-    margin-top: 2rem;
-    margin-bottom: 8rem;
-  }
-
-  .exposicao-page__texto h2 {
+  .exposicao-page__secao {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    margin-top: 5rem;
     margin-bottom: 2rem;
   }
 
-  .exposicao-page__texto p {
+  .exposicao-page__galeria-blocos {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .galeria-bloco {
+    width: 100%;
+    margin-bottom: 7rem;
+  }
+
+  .galeria-bloco--uma {
+    display: flex;
+    justify-content: center;
+  }
+
+  .galeria-bloco--uma img {
+    width: auto;
+    max-width: 78%;
+    height: auto;
+    max-height: 82vh;
+    display: block;
+  }
+
+  .galeria-bloco--duas {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 5rem;
+  }
+
+  .galeria-bloco--duas img {
+    width: auto;
+    max-width: calc(50% - 2.5rem);
+    height: auto;
+    max-height: 75vh;
+    display: block;
+    object-fit: contain;
+  }
+
+  .galeria-bloco:last-child {
+    margin-bottom: 0;
+  }
+
+  .exposicao-page__obras {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 3rem;
+  }
+
+  .exposicao-page__obra {
+    display: block;
+  }
+
+  .exposicao-page__obra img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .exposicao-page__creditos {
+    margin-top: 8rem;
+    padding-top: 2rem;
+    padding-bottom: 5rem;
+    border-top: 1px solid var(--color-muted);
+    max-width: 44rem;
+  }
+
+  .exposicao-page__creditos-titulo {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
     margin: 0 0 1.5rem;
   }
 
+  .exposicao-page__creditos-lista p {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .exposicao-page__texto {
+    margin-top: 8rem;
+    max-width: 44rem;
+    padding-bottom: 5rem;
+  }
+
+  .exposicao-page__texto-conteudo {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .exposicao-page__texto-conteudo p {
+    margin: 0 0 1.5rem;
+  }
+
+  .exposicao-page__texto-conteudo p:last-child {
+    margin-bottom: 0;
+  }
+
   @media (max-width: 700px) {
-    .exposicao-page__header {
-      margin-top: 2rem;
+    .galeria-bloco {
       margin-bottom: 4rem;
     }
 
-    .exposicao-page__imagem {
-      margin-bottom: 4rem;
+    .galeria-bloco--uma img {
+      max-width: 100%;
+      max-height: none;
     }
 
-    .exposicao-page__videos {
-      margin-bottom: 5rem;
+    .galeria-bloco--duas {
+      flex-direction: column;
+      align-items: center;
+      gap: 4rem;
     }
 
-    .exposicao-page__video {
-      margin-bottom: 3rem;
-    }
-
-    .exposicao-page__texto {
-      margin-bottom: 5rem;
+    .galeria-bloco--duas img {
+      max-width: 100%;
+      max-height: none;
     }
   }
 </style>
