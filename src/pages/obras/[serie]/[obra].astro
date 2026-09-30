@@ -82,6 +82,13 @@ const paragrafosDescricao = blocksToParagraphs(obra.descricao?.pt);
             </dd>
           </div>
         )}
+
+        {obra.creditoFotografia && (
+          <div class="ficha-tecnica__credito">
+            <dt>Crédito da fotografia</dt>
+            <dd>{obra.creditoFotografia}</dd>
+          </div>
+        )}
       </dl>
 
       {obra.descricao?.pt && (
@@ -122,6 +129,17 @@ const paragrafosDescricao = blocksToParagraphs(obra.descricao?.pt);
     width: 100%;
     height: auto;
     display: block;
+  }
+
+  .ficha-tecnica__credito {
+    margin-top: var(--space-2);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .ficha-tecnica__credito dt,
+  .ficha-tecnica__credito dd {
+    font-size: inherit;
   }
 
   @media (max-width: 768px) {

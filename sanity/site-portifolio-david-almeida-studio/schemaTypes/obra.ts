@@ -275,33 +275,33 @@ export default defineType({
       group: 'interno',
     }),
 
-    defineField({
-      name: 'imagemAltaResolucao',
-      title: 'Imagem em resolução high',
-      type: 'url',
-      group: 'interno',
-    }),
+defineField({
+  name: 'imagemAltaResolucao',
+  title: 'Imagem em resolução high',
+  type: 'string',
+  group: 'interno',
+}),
 
-    defineField({
-      name: 'imagemTiff',
-      title: 'Imagem em resolução tiff',
-      type: 'url',
-      group: 'interno',
-    }),
+defineField({
+  name: 'imagemTiff',
+  title: 'Imagem em resolução tiff',
+  type: 'string',
+  group: 'interno',
+}),
 
-    defineField({
-      name: 'imagemLow',
-      title: 'Imagem em resolução low',
-      type: 'url',
-      group: 'interno',
-    }),
+defineField({
+  name: 'imagemLow',
+  title: 'Imagem em resolução low',
+  type: 'string',
+  group: 'interno',
+}),
 
-    defineField({
-      name: 'imagemWeb',
-      title: 'Imagem em resolução web',
-      type: 'url',
-      group: 'interno',
-    }),
+defineField({
+  name: 'imagemWeb',
+  title: 'Imagem em resolução web',
+  type: 'string',
+  group: 'interno',
+}),
 
     defineField({
       name: 'exposicoes',
