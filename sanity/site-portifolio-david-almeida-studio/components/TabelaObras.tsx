@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useState} from 'react'
 import {useClient} from 'sanity'
 import {useRouter} from 'sanity/router'
 import {gerarCertificados} from './gerarCertificado'
+import {gerarListaObras} from './gerarListaObras'
 
 /**
  * Ferramenta interna do Sanity Studio:
@@ -19,9 +20,11 @@ type ObraRow = {
   _id: string
   numeroControle?: string
   titulo?: string
+  tituloEn?: string
   dimensoes?: string
   ano?: string
   tecnica?: string
+  tecnicaEn?: string
   imagemPrincipal?: string
   peso?: string
   localizacao?: string
@@ -173,7 +176,10 @@ export function TabelaObrasTool() {
   const [mostrarExportacao, setMostrarExportacao] = useState(false)
   const [mostrarIdiomaCertificado, setMostrarIdiomaCertificado] =
     useState(false)
+  const [mostrarIdiomaListaObras, setMostrarIdiomaListaObras] =
+    useState(false)
   const [gerandoCertificados, setGerandoCertificados] = useState(false)
+  const [gerandoListaObras, setGerandoListaObras] = useState(false)
 
   const [filtros, setFiltros] = useState<Filtros>(
     FILTROS_INICIAIS,
@@ -188,10 +194,12 @@ export function TabelaObrasTool() {
           _id,
           numeroControle,
           "titulo": titulo.pt,
+          "tituloEn": titulo.en,
           "imagemPrincipal": imagens[0].arquivo.asset->url,
           dimensoes,
           ano,
           "tecnica": tecnica.pt,
+          "tecnicaEn": tecnica.en,
           peso,
           localizacao,
           dataInfo,
@@ -455,6 +463,32 @@ export function TabelaObrasTool() {
       id: idPublicado,
       type: 'obra',
     })
+  }
+
+  async function emitirListaObras(idioma: 'pt' | 'en') {
+    if (obrasSelecionadasValidas.length === 0 || gerandoListaObras) {
+      return
+    }
+
+    setGerandoListaObras(true)
+    setMostrarIdiomaListaObras(false)
+    setMostrarExportacao(false)
+
+    try {
+      const selecionadas = obrasSelecionadasValidas
+        .map((id) => obras.find((obra) => obra._id === id))
+        .filter((obra): obra is ObraRow => Boolean(obra))
+
+      await gerarListaObras(selecionadas, idioma)
+    } catch (erro) {
+      // eslint-disable-next-line no-console
+      console.error('Não foi possível gerar a lista de obras:', erro)
+      window.alert(
+        'Não foi possível gerar a lista de obras. Verifique o console do navegador para mais detalhes.',
+      )
+    } finally {
+      setGerandoListaObras(false)
+    }
   }
 
   async function emitirCertificados(idioma: 'pt' | 'en') {
@@ -725,6 +759,29 @@ export function TabelaObrasTool() {
 
               <button
                 type="button"
+                disabled={gerandoListaObras}
+                onClick={() => {
+                  setMostrarExportacao(false)
+                  setMostrarIdiomaListaObras(true)
+                }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '8px',
+                  border: 'none',
+                  borderRadius: 3,
+                  background: 'transparent',
+                  textAlign: 'left',
+                  cursor: gerandoListaObras ? 'default' : 'pointer',
+                  fontSize: 13,
+                  opacity: gerandoListaObras ? 0.5 : 1,
+                }}
+              >
+                Lista de obras
+              </button>
+
+              <button
+                type="button"
                 disabled={gerandoCertificados}
                 onClick={() => {
                   setMostrarExportacao(false)
@@ -748,6 +805,112 @@ export function TabelaObrasTool() {
             </div>
           )}
         </div>
+
+        {mostrarIdiomaListaObras && obrasSelecionadasValidas.length > 0 && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 100,
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="idioma-lista-obras-titulo"
+              style={{
+                width: 360,
+                maxWidth: 'calc(100vw - 32px)',
+                padding: 20,
+                border: '1px solid #ccc',
+                borderRadius: 8,
+                background: '#fff',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
+              }}
+            >
+              <div
+                id="idioma-lista-obras-titulo"
+                style={{
+                  fontSize: 16,
+                  fontWeight: 600,
+                  marginBottom: 8,
+                }}
+              >
+                Lista de obras
+              </div>
+
+              <div
+                style={{
+                  fontSize: 12,
+                  color: '#666',
+                  lineHeight: 1.5,
+                  marginBottom: 16,
+                }}
+              >
+                Escolha o idioma para a lista de obras selecionada
+                {obrasSelecionadasValidas.length === 1 ? '' : 's'}.
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setMostrarIdiomaListaObras(false)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #bbb',
+                    borderRadius: 4,
+                    background: '#fff',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void emitirListaObras('en')}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #bbb',
+                    borderRadius: 4,
+                    background: '#fff',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                  }}
+                >
+                  English
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void emitirListaObras('pt')}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #222',
+                    borderRadius: 4,
+                    background: '#222',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                  }}
+                >
+                  Português
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {mostrarIdiomaCertificado && obrasSelecionadasValidas.length > 0 && (
           <div
@@ -856,6 +1019,22 @@ export function TabelaObrasTool() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {gerandoListaObras && (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: '8px 10px',
+              border: '1px solid #ddd',
+              borderRadius: 5,
+              background: '#fafafa',
+              fontSize: 12,
+              color: '#555',
+            }}
+          >
+            Gerando lista de obras...
           </div>
         )}
 
